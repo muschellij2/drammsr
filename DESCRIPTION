@@ -3,8 +3,10 @@ Type: Package
 Title: Installs DRAMMS 
 Version: 1.0
 Date: 2015-03-07
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line)
-License: What license is it under?
+Author: John Muschelli
+Maintainer: John Muschelli <muschellij2@gmail.com>
+Description: It performs registration with weighting
+License: BSD-3
+Imports:
+	fslr
 SystemRequirements: cmake (http://www.cmake.org)
