@@ -8,6 +8,7 @@
 #' @param outdef output deformation field
 #' @param retimg return nifti object versus output image
 #' @import fslr 
+#' @import oro.nifti
 #' @export
 #' @return If \code{retimg = TRUE}, a \code{nifti} object.  
 #' If \code{retimg = FALSE}, a the filename of the output image.
