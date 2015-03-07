@@ -3,6 +3,7 @@
 #'
 #' @description Create header for DRAMMS command
 #' @param cmd Command to be executed
+#' @param args Arguments to be added to the command.
 #' @export
 #' @return character string of command
 dramms_cmd_maker <- function(

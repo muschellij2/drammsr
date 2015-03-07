@@ -8,6 +8,8 @@ dramms_cmd_maker(cmd = NULL, args = NULL)
 }
 \arguments{
 \item{cmd}{Command to be executed}
+
+\item{args}{Arguments to be added to the command.}
 }
 \value{
 character string of command
