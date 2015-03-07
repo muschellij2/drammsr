@@ -1,0 +1,2 @@
+#! /bin/sh
+"/opt/local/bin/cmake" -P "/Users/johnmuschelli/Dropbox/Packages/drammsr/inst/dramms/lib/cmake/dramms/BASISUninstall.cmake"

@@ -8,8 +8,6 @@
 #' @param outdef output deformation field
 #' @param retimg return nifti object versus output image
 #' @export
-#' @keywords
-#' @seealso
 #' @return If \code{retimg = TRUE}, a \code{nifti} object.  
 #' If \code{retimg = FALSE}, a the filename of the output image.
 dramms <- function(
@@ -21,5 +19,5 @@ dramms <- function(
   ){
 #   dramms --source sourceimage.hdr --target targetimage.nii
 #   --outimg outimage.img --outdef outdef.nii.gz  
-  
+  cmd = 
 }

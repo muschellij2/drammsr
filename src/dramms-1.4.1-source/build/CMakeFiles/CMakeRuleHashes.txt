@@ -1,0 +1,19 @@
+# Hashes of file build rules.
+513220c719ff9a325a14692d530174c7 CMakeFiles/BASIS
+eacaf4299bea08a96385390885f8bf0a CMakeFiles/BASIS-complete
+513220c719ff9a325a14692d530174c7 CMakeFiles/bundle
+581f4860786957bdbf88b5c6b186c2c3 CMakeFiles/bundle-complete
+beb6b461422d4dcb68fe6e2f4de170e2 bundle/src/BASIS-stamp/BASIS-build
+dc171ea15fa37ec7ee3b36b2af4610d6 bundle/src/BASIS-stamp/BASIS-configure
+945dc266f214d484c6b8c4a05d10ff90 bundle/src/BASIS-stamp/BASIS-download
+d91f1373eb408f79750facbebcbbb6a1 bundle/src/BASIS-stamp/BASIS-install
+d18a947ecacf263aecac1df0d80e0d10 bundle/src/BASIS-stamp/BASIS-mkdir
+cc1783dbb6fc7fe81992c64d6473058a bundle/src/BASIS-stamp/BASIS-patch
+9008e6a8ef26ff66cfe05d2cdd2e6e5c bundle/src/BASIS-stamp/BASIS-update
+1d15cad996a0523bdf94dd9c67e88198 bundle/tmp/bundle-build
+07ae3c6b43c858a1da541c571cff20a4 bundle/tmp/bundle-configure
+63e9fa4a89daeaaac26cdc23727e23a2 bundle/tmp/bundle-download
+310a87d20315ff4eb14ba64f965876cc bundle/tmp/bundle-install
+f682d8eda44df52565e7e1b099468205 bundle/tmp/bundle-mkdir
+7dde917c6348c497710dcf1587c13791 bundle/tmp/bundle-patch
+1c1a824809f4056233bccbc62d51dff5 bundle/tmp/bundle-update

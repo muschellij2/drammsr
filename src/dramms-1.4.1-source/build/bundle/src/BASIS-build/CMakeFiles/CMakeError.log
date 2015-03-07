@@ -1,0 +1,16 @@
+Determining if the include file tr1/tuple exists failed with the following output:
+Change Dir: /Users/johnmuschelli/Dropbox/Packages/drammsr/src/dramms-1.4.1-source/build/bundle/src/BASIS-build/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTryCompileExec1504038786/fast"
+make -f CMakeFiles/cmTryCompileExec1504038786.dir/build.make CMakeFiles/cmTryCompileExec1504038786.dir/build
+/opt/local/bin/cmake -E cmake_progress_report /Users/johnmuschelli/Dropbox/Packages/drammsr/src/dramms-1.4.1-source/build/bundle/src/BASIS-build/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building CXX object CMakeFiles/cmTryCompileExec1504038786.dir/CheckIncludeFile.cxx.o
+/usr/bin/c++    -Wall -mtune=core2 -g -O2      -o CMakeFiles/cmTryCompileExec1504038786.dir/CheckIncludeFile.cxx.o -c /Users/johnmuschelli/Dropbox/Packages/drammsr/src/dramms-1.4.1-source/build/bundle/src/BASIS-build/CMakeFiles/CMakeTmp/CheckIncludeFile.cxx
+/Users/johnmuschelli/Dropbox/Packages/drammsr/src/dramms-1.4.1-source/build/bundle/src/BASIS-build/CMakeFiles/CMakeTmp/CheckIncludeFile.cxx:1:10: fatal error: 'tr1/tuple' file not found
+#include <tr1/tuple>
+         ^
+1 error generated.
+make[5]: *** [CMakeFiles/cmTryCompileExec1504038786.dir/CheckIncludeFile.cxx.o] Error 1
+make[4]: *** [cmTryCompileExec1504038786/fast] Error 2
+
+

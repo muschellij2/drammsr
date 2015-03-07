@@ -1,0 +1,2 @@
+/usr/bin/ar cr ../../../lib/libutilities.a  CMakeFiles/utilities_cxx.dir/os.cxx.o CMakeFiles/utilities_cxx.dir/path.cxx.o CMakeFiles/utilities_cxx.dir/subprocess.cxx.o CMakeFiles/utilities_cxx.dir/stdio.cxx.o CMakeFiles/utilities_cxx.dir/CmdLine.cxx.o CMakeFiles/utilities_cxx.dir/utilities.cxx.o
+/usr/bin/ranlib ../../../lib/libutilities.a
