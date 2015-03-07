@@ -1,5 +1,6 @@
 # drammsr
 Create R package for DRAMMS
+[![Travis-CI Build Status](https://travis-ci.org/muschellij2/drammsr.png?branch=master)](https://travis-ci.org/muschellij2/drammsr)
 
 This package will install Deformable Registration via Attribute Matching and Mutual-Saliency Weighting (DRAMMS)
 (http://www.cbica.upenn.edu/sbia/software/dramms):
