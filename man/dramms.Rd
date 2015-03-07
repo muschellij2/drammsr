@@ -24,4 +24,14 @@ If \code{retimg = FALSE}, a the filename of the output image.
 \description{
 Runs DRAMMS on source and target
 }
+\examples{
+\dontrun{
+require(fslr)
+temp = file.path(fsldir(), "data", "standard", "MNI152_T1_1mm.nii.gz")
+# get file
+#  https://github.com/muschellij2/FSLR_Data/raw/master/01-Baseline_T1.nii.gz
+brain = file.path(fsldir(), "data", "standard", "MNI152_T1_1mm_brain.nii.gz")
+res = dramms(source = brain, target = temp, retimg = TRUE)
+}
+}
 
