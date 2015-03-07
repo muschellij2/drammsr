@@ -36,7 +36,8 @@ dramms <- function(
   }
   
   if (retimg){
-    img = readNIfTI()
+    img = readNIfTI(outimg, reorient=FALSE)
+    return(img)
   }
-  return()
+  return(outimg)
 }

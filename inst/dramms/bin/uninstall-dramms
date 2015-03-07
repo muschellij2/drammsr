@@ -1,2 +1,2 @@
 #! /bin/sh
-"/Applications/CMake 2.8-7.app/Contents/bin/cmake" -P "/Users/johnmuschelli/Dropbox/Packages/drammsr/inst/dramms/lib/cmake/dramms/DRAMMSUninstall.cmake"
+"/opt/local/bin/cmake" -P "/Users/johnmuschelli/Dropbox/Packages/drammsr/inst/dramms/lib/cmake/dramms/DRAMMSUninstall.cmake"

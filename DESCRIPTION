@@ -8,5 +8,6 @@ Maintainer: John Muschelli <muschellij2@gmail.com>
 Description: It performs registration with weighting
 License: BSD-3
 Imports:
-	fslr
+	fslr,
+	oro.nifti
 SystemRequirements: cmake (http://www.cmake.org)
