@@ -2,4 +2,7 @@
 
 export(download_dramms)
 export(dramms)
+export(dramms_cmd_maker)
+export(dramms_parse_args)
 export(install_dramms)
+import(fslr)

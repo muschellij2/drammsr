@@ -223,7 +223,7 @@ basis_set_config (PYTHON_EXECUTABLE "")
 ## @brief Jython interpreter used to build/configure BASIS Jython modules.
 basis_set_config (JYTHON_EXECUTABLE "")
 ## @brief Perl interpreter used to build/configure BASIS Perl modules.
-basis_set_config (PERL_EXECUTABLE "/opt/local/bin/perl")
+basis_set_config (PERL_EXECUTABLE "/usr/bin/perl")
 ## @brief Bash executable used to build/configure BASIS Bash modules.
 basis_set_config (BASH_EXECUTABLE "/bin/bash")
 
