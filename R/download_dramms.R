@@ -3,7 +3,6 @@
 #' @description Download the source .tar.gz of DRAMMS
 #' @param version Version of DRAMMS to download
 #' @param ... arguments to pass to \code{\link{download.file}}
-#' @export
 #' @return Filename of downloaded file
 download_dramms <- function(
   version = "current", # Version of DRAMMS to download
@@ -23,7 +22,6 @@ download_dramms <- function(
 #' @description Install the source .tar.gz of DRAMMS
 #' @param tarfile Name ofDRAMMS source file
 #' @param install_dir where to put
-#' @export
 #' @return NULL
 install_dramms = function(
   tarfile = NULL, 

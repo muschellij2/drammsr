@@ -29,21 +29,8 @@ dramms <- function(
   ){
   source = checkimg(source)
   target = checkimg(target)
-  #   dramms --source sourceimage.hdr --target targetimage.nii
-#   --outimg outimage.img --outdef outdef.nii.gz  
-#   cmd = 
-  check_outfile = function(outfile, retimg){
-    if (retimg){
-      if (is.null(outfile)) {
-        outfile = paste0(tempfile(), ".nii.gz")
-      } 
-    } else {
-      stopifnot(!is.null(outfile))
-    }  
-    return(path.expand(outfile))
-  }
-  outimg = check_outfile(outfile = outimg, retimg = retimg)
-
+  outimg = check_outfile(outfile = outimg, retimg = retimg, fileext = ".nii.gz")
+  
   args = c("--source"=source, 
            "--target"=target,
            "--outimg"=outimg,
