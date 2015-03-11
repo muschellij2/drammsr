@@ -1,5 +1,5 @@
-% Copyright (c) 2012 University of Pennsylvania. All rights reserved.
-% See http://www.rad.upenn.edu/sbia/software/license.html or COPYING file.
+% Copyright (c) 2012-2014 University of Pennsylvania. All rights reserved.
+% See http://www.cbica.upenn.edu/sbia/software/license.html or COPYING file.
 %
 % Contact: SBIA Group <sbia-software at uphs.upenn.edu>
 
@@ -39,7 +39,7 @@
 \section{Introduction}
 \label{intro}
 
-DRAMMS is a deformable image registration software package designed for 2D-to-2D and 3D-to-3D image registrations. Fig. \ref{fig:DRAMMSApplications} shows some typical applications, including, 
+DRAMMS is a deformable image registration software package designed for 2D-to-2D and 3D-to-3D image registrations. In the spring 2014, it has also been extended to 4D-DRAMMS (for sptail-temporal longitudinal analysis), and population-wise-DRAMMS (for unbiased atlas construction of images from a population). Figure 1 shows some typical applications, including, 
 
 \indent -- Cross-subject registration of the same organ (brain, breast, cardiac, etc); \\
 \indent -- Mono- and Multi-modality registration (MRI, CT, histology); \\
@@ -54,8 +54,8 @@ DRAMMS is a deformable image registration software package designed for 2D-to-2D
 	\label{fig:DRAMMSApplications}
 \end{figure}
 
-\noindent {\bf{DRAMMS Homepage:}} \url{http://www.rad.upenn.edu/sbia/software/dramms/index.html} \\
-\noindent {\bf{DRAMMS Manual:}} \url{http://www.rad.upenn.edu/sbia/software/dramms/_downloads/DRAMMS_Software_Manual.pdf} 
+\noindent {\bf{DRAMMS Homepage:}} \url{http://www.cbica.upenn.edu/sbia/software/dramms/index.html} \\
+\noindent {\bf{DRAMMS Manual:}} \url{http://www.cbica.upenn.edu/sbia/software/dramms/_downloads/DRAMMS_Software_Manual.pdf} 
 
 
 
@@ -71,8 +71,8 @@ DRAMMS is a deformable image registration software package designed for 2D-to-2D
 \section{Download and Install}
 \label{install}
 
-{\bf{Download:}} \url{http://www.rad.upenn.edu/sbia/software/dramms/download.html}. \\
-{\bf{Install :}} \url{http://www.rad.upenn.edu/sbia/software/dramms/installation.html}. Requires CMake (version 2.8 or above) and GCC (version 4.1 or above).
+{\bf{Download:}} \url{http://www.cbica.upenn.edu/sbia/software/dramms/download.html}. \\
+{\bf{Install :}} \url{http://www.cbica.upenn.edu/sbia/software/dramms/installation.html}. Requires CMake (version 2.8 or above) and GCC (version 4.1 or above).
 
 
 
@@ -84,7 +84,7 @@ Default usage below will get reasonable results in most cases.
     dramms -S ${SourceImage}         -T ${TargetImage} 
            -O ${RegisteredImage_S2T} -D ${Deformation_S2T} 
 \end{verbatim}
-More specific usage including parameter tuning in various scenarios can be found in Tutorial page \url{http://www.rad.upenn.edu/sbia/software/dramms/tutorials.html}.
+More specific usage including parameter tuning in various scenarios can be found in Tutorial page \url{http://www.cbica.upenn.edu/sbia/software/dramms/tutorials.html}.
 
 
 
@@ -93,6 +93,8 @@ More specific usage including parameter tuning in various scenarios can be found
 \begin{thebibliography}{4}
 
 \bibitem{Ou11} Yangming Ou, Aris Sotiras, Nikos Paragios, Christos Davatzikos: DRAMMS: Deformable registration via attribute matching and mutual-saliency weighting. Medical Image Analysis 15(4): 622-639 (2011).
+
+\bibitem{Ou14} Yangming Ou, Hamed Akbari, Michell Bilello, Xiao Da, Christos Davatizkos: Comparative Evaluation of Registration Algorithms for Different Brain Databases with Varying Difficulty: Results and Insights. IEEE Transactions on Medical Imaging, DOI: 10.1109/TMI.2014.2330355. (2014).
 
 
 \end{thebibliography}

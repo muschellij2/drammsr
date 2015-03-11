@@ -650,6 +650,26 @@ Image* MultiplyTransform(const Image* D, float factor);
 Image::Transform DivideTransform(const Image::Transform& T, float factor);
 
 /**
+ * @brief Square a deformation.
+ *
+ * @param [in] D a deformation field.
+ *
+ * @returns the squared deformation.
+ */
+Image* SquareDeformation(const Image* D);
+
+
+/**
+ * @brief Sqrt of a deformation.
+ *
+ * @param [in] D a deformation field.
+ *
+ * @returns the sqrt of deformation.
+ */
+Image* SqrtDeformation(const Image* D);
+
+
+/**
  * @brief Divide deformation field by a user-specified factor.
  *
  * @param [in] D           Deformation field in DRAMMS format.
@@ -715,7 +735,7 @@ Image* InvertTransform(const Image* D, int num_samples = 2, int boundary = 8);
  *                               format. Use the Image::SetFormat() method
  *                               to change the format of the image to DRAMMS.
  */
-Image* InvertTransformChen(const Image* D);
+Image* InvertTransformChen(const Image* D, Fvector3d& maxAbs);
 
 /**
  * @brief Concatenate two affine transformations.

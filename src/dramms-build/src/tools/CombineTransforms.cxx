@@ -118,7 +118,6 @@ int main(int argc, char* argv[])
 
         // the constructor of the CmdLine class has already added the standard
         // options for help output and version information
-
         vector<Arg*> ops;
         ops.push_back(&concatenate);
         ops.push_back(&add);

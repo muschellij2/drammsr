@@ -59,6 +59,7 @@ void print_help()
     cout << "Optional arguments:" << endl;
     cout << "  -r <int>              The number of multi-resolution pyramid levels used for optimization. (default: 3)" << endl;
     cout << "  -b <int>              The number of voxels between neigboring control points. (default: 7)" << endl;
+    cout << "  -w <float>            The weight for regulization of the deformation. Larger weights for smoother deformations. (default: 0.2)" << endl;
     cout << "  -I <dir>              Request storage of intermediate images and deformations to" << endl;
     cout << "                        files in the specified directory. (default: none)" << endl;
     cout << endl;
@@ -76,7 +77,9 @@ void print_help()
 // list of sub-functions (details in the end of this file)
 // ===========================================================================
 
-void FFD2D(unsigned char **sliceA, unsigned char **sliceB, unsigned char ***featureMapA, unsigned char ***featureMapB, unsigned char **sliceMask, Ivector2d sliceSize, int numFeatures, int distBetweenControlPoints, Fvector2d **controlPoints, Fvector2d **defB2A, float **sliceA2B, int levelIndex, int numLevels);
+void convert2Ddefto3Ddef(Fvector2d **def2, Fvector3d ***def3, Ivector2d si);
+
+void FFD2D(unsigned char **sliceA, unsigned char **sliceB, unsigned char ***featureMapA, unsigned char ***featureMapB, unsigned char **sliceMask, Ivector2d sliceSize, int numFeatures, int distBetweenControlPoints, Fvector2d **controlPoints, Fvector2d **defB2A, float **sliceA2B, int levelIndex, int numLevels, float lambda);
 float Bspline(float u, int level);
 float calculateIntensityDifferenceSquared(unsigned char **tempSlice, float **movingSlice, Ivector2d sliceSize);
 float calculateEnergyOnFeatures(unsigned char ***featureMapB, float ***featureMapA2B, Ivector2d sliceSize, int numFeatures);
@@ -94,7 +97,7 @@ void CopyDisplacementAtControlPoints2D(Fvector2d **controlPoints, Fvector2d **co
 void calculateDisplacementIncrementAtControlPoints(Fvector2d **controlPointsBackup, Fvector2d **controlPoints, Fvector2d **controlPointsIncrement, int numControlPointsX, int numControlPointsY);
 void smoothDisplacementAtControlPoints2D(Fvector2d **controlPoints, Fvector2d **controlPointsSmoothed, int numControlPointsX, int numControlPointsY, int distBetweenControlPoints, int levelIndex, int numLevels, float factor);
 void UpdateControlPointsWithSmoothIncrement2(Fvector2d **controlPointsBackup, Fvector2d **controlPointsIncrement, Fvector2d **controlPointsIncrementSmoothed, Fvector2d **controlPoints, int numControlPointsX, int numControlPointsY, float alpha, unsigned char **mask, int distBetweenControlPoints, int levelIndex, int numLevels);
-void UpdateControlPointsWithSmoothIncrement(Fvector2d **controlPointsBackup, Fvector2d **controlPoints, Fvector2d **controlPointsUpdated, int numControlPointsX, int numControlPointsY, int IterIndex, int maxNumIterInResolution, int levelIndex, int numLevels, int distBetweenControlPoints, unsigned char **mask);
+void UpdateControlPointsWithSmoothIncrement(Fvector2d **controlPointsBackup, Fvector2d **controlPoints, Fvector2d **controlPointsUpdated, int numControlPointsX, int numControlPointsY, int IterIndex, int maxNumIterInResolution, int levelIndex, int numLevels, int distBetweenControlPoints, unsigned char **mask, float lambda);
 void LinearCombinationOfTwoControlPointsMats(Fvector2d **controlPointsNew, Fvector2d **controlPointsOld, Fvector2d **controlPointsUpdated, float weighting, int numControlPointsX, int numControlPointsY);
 void Convolution2DFloat(float** input,Ivector2d inputSize,float** mask,Ivector2d maskSize,float** output);
 void smoothDeformationField(Fvector2d **dfField, Fvector2d **dfFieldSmoothed, Ivector2d dfSize, int levelIndex, int numLevels);
@@ -119,6 +122,8 @@ int main(int argc,char *argv[])
 {
   int         numImgLevels                     = 3;
   int         distBetweenControlPoints         = 7;
+  float       regWeight                        = 0.3555; // this one is based on the regularizationWeightMapped in the main dramms script (dramms.sh.in).
+  float       lambda;
   const char* folderNameForIntermediateResults = NULL;
 
   if (argc == 1) {
@@ -127,7 +132,7 @@ int main(int argc,char *argv[])
   }
 
   int c = -1;
-  while((c=getopt(argc,argv,"r:b:I:hv")) != -1)
+  while((c=getopt(argc,argv,"r:b:I:w:hv")) != -1)
     {
       switch(c)
         {
@@ -139,6 +144,10 @@ int main(int argc,char *argv[])
                 sscanf(optarg, "%d", &distBetweenControlPoints);
                 break;
                 
+	    case 'w':
+		sscanf(optarg, "%f", &regWeight);
+		break;
+
             case 'I':
                 folderNameForIntermediateResults = optarg;
                 break;
@@ -187,6 +196,11 @@ int main(int argc,char *argv[])
 
    struct tms startTime;
    times(&startTime);
+
+   // map regularization weight
+   lambda = (log(regWeight/0.3555)+15)/15;
+   if (lambda<0)   lambda=0.005;
+   if (lambda>1.5) lambda=1.5;
 
    // read image A
    Image* imageA = ReadImage(inputImgNameA);
@@ -253,18 +267,22 @@ int main(int argc,char *argv[])
      // allocate memory for images at this level
      Image imageA2B   (imageSizeThisLevel.x, imageSizeThisLevel.y, 1, DT_FLOAT,         1, Image::FORMAT_DRAMMS);
      Image deformation(imageSizeThisLevel.x, imageSizeThisLevel.y, 1, DT_FLOAT,         2, Image::FORMAT_DRAMMS);
+     Image deformation3(imageSizeThisLevel.x, imageSizeThisLevel.y, 1, DT_FLOAT,        3, Image::FORMAT_DRAMMS);
      Image maskImage  (imageSizeThisLevel.x, imageSizeThisLevel.y, 1, DT_UNSIGNED_CHAR, 1, Image::FORMAT_DRAMMS);
      imageA2B   .CopyRegion(imageBThisLevel); // important for cropping as done implicitly by WriteNiftiImage()
      deformation.CopyRegion(imageBThisLevel); // currently not used as images are not padded (see Deform3D)
+     deformation3.CopyRegion(imageBThisLevel);
      maskImage  .CopyRegion(imageBThisLevel);
      imageA2B   .CopyTransform(imageBThisLevel); // defines image to be in space B
      deformation.CopyTransform(imageBThisLevel);
+     deformation3.CopyTransform(imageBThisLevel);
      maskImage  .CopyTransform(imageBThisLevel);
      // get pointers to image data
      unsigned char** imgA   = imageAThisLevel->img.uc[0];
      unsigned char** imgB   = imageBThisLevel->img.uc[0];
      float**         imgA2B = imageA2B.img.fl[0];
      Fvector2d**     defB2A = deformation.img.v2[0];
+     Fvector3d***    defB2A3= deformation3.img.v3;
      unsigned char** mask   = maskImage.img.uc[0];
      // generate mask
      GenerateMaskForControlPoints(imgA, imgB, imageSizeThisLevel, distBetweenControlPoints, mask, levelIndex, numImgLevels);    
@@ -346,10 +364,12 @@ int main(int argc,char *argv[])
        delete castedA2B;
        printf("Saving initial deformation field in level %d\n", levelIndex);
        sprintf(filename, "%s/DField_level%d_init.nii.gz", folderNameForIntermediateResults, levelIndex);
-       WriteImage(filename, &deformation);
+       //WriteImage(filename, &deformation);
+       convert2Ddefto3Ddef(defB2A, defB2A3, imageSizeThisLevel);
+       WriteImage(filename, &deformation3);
      }
      // search displacements at control points in this level, then use the displacement at control points to generate warped image and deformation field
-     FFD2D(imgA, imgB, featureMapA, featureMapB, mask, imageSizeThisLevel, numFeaturesA, distBetweenControlPoints, controlPointsThisLevel, defB2A, imgA2B, levelIndex, numImgLevels);
+     FFD2D(imgA, imgB, featureMapA, featureMapB, mask, imageSizeThisLevel, numFeaturesA, distBetweenControlPoints, controlPointsThisLevel, defB2A, imgA2B, levelIndex, numImgLevels, lambda);
      // save intermediate results in this level
      if (folderNameForIntermediateResults) {
         printf("saving intermediate warped images and deformation fields into folder %s\n", folderNameForIntermediateResults);
@@ -366,7 +386,9 @@ int main(int argc,char *argv[])
         delete castedA2B;
         // deformation field
         sprintf(filename, "%s/DField_level%d.nii.gz", folderNameForIntermediateResults, levelIndex);
-        WriteImage(filename, &deformation);
+        //WriteImage(filename, &deformation);
+        convert2Ddefto3Ddef(defB2A, defB2A3, imageSizeThisLevel);
+        WriteImage(filename, &deformation3);
       }
       // save final result at finest resolution
       if (i == (numImgLevels - 1)) {
@@ -375,7 +397,9 @@ int main(int argc,char *argv[])
         WriteImage(outputImgNameA2B, castedA2B);
         delete castedA2B;
         printf("... %s ", outputImgNameA2B);
-        WriteImage(outputDeformationFieldName, &deformation);
+        //WriteImage(outputDeformationFieldName, &deformation);
+        convert2Ddefto3Ddef(defB2A, defB2A3, imageSizeThisLevel);
+        WriteImage(outputDeformationFieldName, &deformation3);
         printf(" ... %s !\n\n", outputDeformationFieldName);
       }
    }
@@ -391,8 +415,21 @@ int main(int argc,char *argv[])
 // auxiliary functions
 // ===========================================================================
 
+// added sub-function on 1/4/2015
+void convert2Ddefto3Ddef(Fvector2d **def2, Fvector3d ***def3, Ivector2d is)
+{
+	int r,s;
+	for (r=0; r<is.x; r++)
+	  for (s=0; s<is.y; s++)
+		{
+		def3[0][r][s].x = def2[r][s].x;
+		def3[0][r][s].y = def2[r][s].y;
+		def3[0][r][s].z = 0.0;
+		}
+}
+
 // sub-function 7
-void FFD2D(unsigned char **sliceA, unsigned char **sliceB, unsigned char ***featureMapA, unsigned char ***featureMapB, unsigned char **sliceMask, Ivector2d sliceSize, int numFeatures, int distBetweenControlPoints, Fvector2d **controlPoints, Fvector2d **defB2A, float **sliceA2B, int levelIndex, int numLevels)
+void FFD2D(unsigned char **sliceA, unsigned char **sliceB, unsigned char ***featureMapA, unsigned char ***featureMapB, unsigned char **sliceMask, Ivector2d sliceSize, int numFeatures, int distBetweenControlPoints, Fvector2d **controlPoints, Fvector2d **defB2A, float **sliceA2B, int levelIndex, int numLevels, float lambda)
 {
   int maxNumIterInResolution=5;  // maxIter1
   int i;
@@ -419,6 +456,8 @@ void FFD2D(unsigned char **sliceA, unsigned char **sliceB, unsigned char ***feat
   energyAB[0] = GenerateFeaturesAndDeformationFieldByFFDAndCalculateEnergy(featureMapA, featureMapB, sliceSize, distBetweenControlPoints, controlPoints, numFeatures, featureMapA2BTemp, defB2A, levelIndex, numLevels);
   CopyFeatureMapsFloat(featureMapA2BTemp, featureMapA2BIterative, sliceSize, numFeatures);
  
+  if (energyAB[0]==0.0f)  maxNumIterInResolution=0; // no need to iterate
+
   float diffRatio, energyABIterative, energyABTemp;
   energyABIterative = energyAB[0];
   energyABTemp = energyAB[0];
@@ -455,8 +494,8 @@ void FFD2D(unsigned char **sliceA, unsigned char **sliceB, unsigned char ***feat
       //----------------------------------------------------------
       // Check: after one iteration of search displacement at all control points, check the total energy. If it is relatively stable, no need for further iterations in this resolution.
       //----------------------------------------------------------
-      UpdateControlPointsWithSmoothIncrement(controlPointsBackup, controlPoints, controlPoints, numControlPointsX, numControlPointsY, IterIndex, maxNumIterInResolution, levelIndex, numLevels, distBetweenControlPoints, sliceMask);
-      smoothDisplacementAtControlPoints2D(controlPoints, controlPoints, numControlPointsX, numControlPointsY, distBetweenControlPoints, levelIndex, numLevels, 0.04*pow(1.5,(float)(3-levelIndex)));  // this factor decreases the smooth kernel to its 4% 
+      UpdateControlPointsWithSmoothIncrement(controlPointsBackup, controlPoints, controlPoints, numControlPointsX, numControlPointsY, IterIndex, maxNumIterInResolution, levelIndex, numLevels, distBetweenControlPoints, sliceMask, lambda);
+      smoothDisplacementAtControlPoints2D(controlPoints, controlPoints, numControlPointsX, numControlPointsY, distBetweenControlPoints, levelIndex, numLevels, 0.04*pow(1.5,(float)(3-levelIndex))*lambda );  // this factor decreases the smooth kernel to its 4% 
       energyAB[IterIndex+1] = GenerateFeaturesAndDeformationFieldByFFDAndCalculateEnergy(featureMapA, featureMapB, sliceSize, distBetweenControlPoints, controlPoints, numFeatures, featureMapA2BIterative, defB2A, levelIndex, numLevels);
       diffRatio = (energyAB[IterIndex+1]-energyAB[IterIndex])/energyAB[IterIndex];
       energyABTemp = energyAB[IterIndex+1];
@@ -1467,7 +1506,7 @@ void UpdateControlPointsWithSmoothIncrement2(Fvector2d **controlPointsBackup, Fv
 
 
 // sub-function 22
-void UpdateControlPointsWithSmoothIncrement(Fvector2d **controlPointsBackup, Fvector2d **controlPoints, Fvector2d **controlPointsUpdated, int numControlPointsX, int numControlPointsY, int IterIndex, int maxNumIterInResolution, int levelIndex, int numLevels, int distBetweenControlPoints, unsigned char **mask)
+void UpdateControlPointsWithSmoothIncrement(Fvector2d **controlPointsBackup, Fvector2d **controlPoints, Fvector2d **controlPointsUpdated, int numControlPointsX, int numControlPointsY, int IterIndex, int maxNumIterInResolution, int levelIndex, int numLevels, int distBetweenControlPoints, unsigned char **mask, float lambda)
 {
   // idea: controlPointsUpdated = controlPointsBackup + (1-alpha)*(controlPoints-controlPointsBackup) + alpha*smooth(controlPoints-controlPointsBackup)
   
@@ -1477,9 +1516,9 @@ void UpdateControlPointsWithSmoothIncrement(Fvector2d **controlPointsBackup, Fve
   float alpha;   // smooth weighting
   
   calculateDisplacementIncrementAtControlPoints(controlPointsBackup, controlPoints, controlPointsIncrement, numControlPointsX, numControlPointsY);  // calculate increment: controlPoints - controlPointsBackup
-  smoothDisplacementAtControlPoints2D(controlPointsIncrement, controlPointsIncrementSmoothed, numControlPointsX, numControlPointsY, distBetweenControlPoints, levelIndex, numLevels, 1.0); // smooth: controlPointsIncrement -> controlPointsIncrementSmoothed
+  smoothDisplacementAtControlPoints2D(controlPointsIncrement, controlPointsIncrementSmoothed, numControlPointsX, numControlPointsY, distBetweenControlPoints, levelIndex, numLevels, 1.0*lambda); // smooth: controlPointsIncrement -> controlPointsIncrementSmoothed
      
-  alpha=0.5*exp(-pow((float)IterIndex,2.0)/(2*pow((float)maxNumIterInResolution,2.0))); // Parameter "alpha" controls how much to smooth: the bigger alpha is, the more smoothness there will be. At coarse stage, smooth more; as displacement gets more and more accurate at each control point, smooth less
+  alpha=0.5*lambda*exp(-pow((float)IterIndex,2.0)/(2*pow((float)maxNumIterInResolution,2.0))); // Parameter "alpha" controls how much to smooth: the bigger alpha is, the more smoothness there will be. At coarse stage, smooth more; as displacement gets more and more accurate at each control point, smooth less
   UpdateControlPointsWithSmoothIncrement2(controlPointsBackup, controlPointsIncrement, controlPointsIncrementSmoothed, controlPointsUpdated, numControlPointsX, numControlPointsY, alpha, mask, distBetweenControlPoints, levelIndex, numLevels);
   
   //release memory

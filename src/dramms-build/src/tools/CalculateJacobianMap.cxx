@@ -8,7 +8,7 @@
  * Contact: SBIA Group <sbia-software at uphs.upenn.edu>
  */
 
-#include <string>
+#include <string.h>
 #include <iostream> // cout, cerr, endl
 #include <math.h>   // M_PI, exp(), pow(), sqrt(),...
 #include <stdlib.h>
@@ -46,9 +46,12 @@ void print_help()
     cout << "  " << exec_name << " <input deformation> <output jacobian map>" << endl;
     cout << endl;
     cout << "Required arguments:" << endl;
-	cout << "  <input deformation>    file of deformation field." << endl;
+    cout << "  <input deformation>    file of deformation field." << endl;
     cout << "  <output jacobian map>  file path of Jacobian image." << endl;
     cout << endl;
+    cout << "Required arguments:" << endl;
+	cout << "  -f   : source image" << endl;
+	cout << "  -t   : target image" << endl;
     cout << "Optional arguments:" << endl;
 	cout << "  -W   : x-y switch off (default: on for default input deformation in DRAMMS format)" << endl;
 	cout << "  -s   : smooth deformation field before calculating Jacobian map (default: off)" <<endl;
@@ -57,11 +60,11 @@ void print_help()
 	cout << "  -L   : take log(JacobianDet) Note: all non-positive Jacobian determinant values will be mapped to -100.0 in log(JacDet) calculation. (default: off)" << endl;
 	cout << endl;
 	cout << "Example: " << endl;
-	cout << "  " << exec_name <<" DF.def JacobianMap.img -s -S" << endl;
+	cout << "  " << exec_name <<" DF.def JacobianMap.img -f source.nii.gz -t target.nii.gz -s -S" << endl;
 	cout << endl;
     print_contact();
     cout << endl;
-	cout << " Note: the output Jacobian image is in float data type." << endl << endl;
+	cout << " Note: the output Jacobian image is in float data type, and in the target image space." << endl << endl;
 }
 
 
@@ -498,6 +501,7 @@ int main(int argc,char *argv[])
 
   Ivector3d     imageSize;
   Fvector3d     voxelSize;
+  Fvector3d     S2T_voxelsize_ratio;
   int           i,j,k;
   int 			JacobianSmoothOrNot=NNO;
   int			DeformationSmoothOrNot=NNO;
@@ -507,10 +511,15 @@ int main(int argc,char *argv[])
   bool			ok = true;
   
   Image* deformation = NULL;
-	
+  char sourceimagename[1024];
+  char targetimagename[1024];
+  sprintf(sourceimagename, "%s", "NULL");
+  sprintf(targetimagename, "%s", "NULL");
+  Image* sourceimage = NULL;
+  Image* targetimage = NULL;
   
   int c=-1;
-  while((c=getopt(argc,argv,"WsSCLhv")) != -1)
+  while((c=getopt(argc,argv,"WsSCLhvf:t:")) != -1)
     {
       switch(c)
 	{
@@ -533,6 +542,14 @@ int main(int argc,char *argv[])
 	case 'L':
 		LogJacobianDetOrNot=YYES;
 		break;
+	
+	case 'f':
+		sscanf(optarg,"%s", sourceimagename);
+		break;
+	
+	case 't':
+		sscanf(optarg,"%s", targetimagename);
+		break;
 
     case 'v':
         // ignore
@@ -549,7 +566,12 @@ int main(int argc,char *argv[])
 	}
     }
 
-  
+  // inforce the required input images
+  if ( strcmp(sourceimagename,"NULL")==0 || strcmp(targetimagename,"NULL")==0 ) {
+	cerr << "Error: Require the input of source image (-f) and target image  (-t)." << endl;
+	cerr << "See help (-h) for a list of required argument." << endl;
+  	exit(1);
+  }
   
   argc -= optind;
   argv += optind;
@@ -574,8 +596,20 @@ int main(int argc,char *argv[])
     cerr << "Failed to read deformation field from file " << deformationfile << endl;
     exit(1);
   }
-  
-  
+
+  // read source and target image
+  sourceimage = ReadImage(sourceimagename);
+  if (sourceimage == NULL) {
+	cerr << "Failed to read source image file " << sourceimagename << endl;
+	exit(1);
+  }
+  targetimage = ReadImage(targetimagename);
+  if (targetimage == NULL) {
+	cerr << "Failed to read target image file" << targetimagename << endl;
+	exit(1);
+  }
+
+ 
   imageSize.x = deformation->region.nx;
   imageSize.y = deformation->region.ny;
   imageSize.z = deformation->region.nz;
@@ -585,7 +619,24 @@ int main(int argc,char *argv[])
   if (imageSize.z==0) imageSize.z=1;
   if (voxelSize.z==0) voxelSize.z=1;
   
-  
+  // the deformation and the target image must be in the same space
+  if (sourceimage->hdr.pixdim[1]<=0) sourceimage->hdr.pixdim[1]=1;
+  if (sourceimage->hdr.pixdim[2]<=0) sourceimage->hdr.pixdim[2]=1;
+  if (sourceimage->hdr.pixdim[3]<=0) sourceimage->hdr.pixdim[3]=1;
+  if (targetimage->hdr.pixdim[1]<=0) targetimage->hdr.pixdim[1]=1;
+  if (targetimage->hdr.pixdim[2]<=0) targetimage->hdr.pixdim[2]=1;
+  if (targetimage->hdr.pixdim[3]<=0) targetimage->hdr.pixdim[3]=1;
+
+  if ( (imageSize.x!=targetimage->region.nx) || (imageSize.y!=targetimage->region.ny) || (imageSize.z!=targetimage->region.nz) || fabs((voxelSize.x-targetimage->hdr.pixdim[1])/targetimage->hdr.pixdim[1])>0.005 || fabs((voxelSize.y-targetimage->hdr.pixdim[2])/targetimage->hdr.pixdim[2])>0.005 || fabs((voxelSize.z-targetimage->hdr.pixdim[3])/targetimage->hdr.pixdim[3])>0.005 ) {
+	  cerr << "the target image and the deformation must be in the same space (having the same image dimension and voxel size)!" << endl;
+	  cerr << "please double check." << endl;
+	  exit(1);
+  }
+  S2T_voxelsize_ratio.x = sourceimage->hdr.pixdim[1] / targetimage->hdr.pixdim[1];
+  S2T_voxelsize_ratio.y = sourceimage->hdr.pixdim[2] / targetimage->hdr.pixdim[2];
+  S2T_voxelsize_ratio.z = sourceimage->hdr.pixdim[3] / targetimage->hdr.pixdim[3];
+
+
   Fvector3d*** DeformFld;
   std::vector<float> v;
   DeformFld=Fvector3dalloc3d(imageSize.x, imageSize.y, imageSize.z);
@@ -595,13 +646,13 @@ int main(int argc,char *argv[])
 		{
 		deformation->get(i, j, k, v);
 		if (v.size() == 2) {
-			DeformFld[k][i][j].x = v[0];
-			DeformFld[k][i][j].y = v[1];
+			DeformFld[k][i][j].x = (v[0]+i)*S2T_voxelsize_ratio.x - i;
+			DeformFld[k][i][j].y = (v[1]+j)*S2T_voxelsize_ratio.y - j;
 			DeformFld[k][i][j].z = 0;
 		} else {
-			DeformFld[k][i][j].x = v[0];
-			DeformFld[k][i][j].y = v[1];
-			DeformFld[k][i][j].z = v[2];
+			DeformFld[k][i][j].x = (v[0]+i)*S2T_voxelsize_ratio.x - i;
+			DeformFld[k][i][j].y = (v[1]+j)*S2T_voxelsize_ratio.y - j;
+			DeformFld[k][i][j].z = (v[2]+k)*S2T_voxelsize_ratio.z - k;
 		}
       }
 

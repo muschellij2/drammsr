@@ -930,6 +930,13 @@ int main(int argc,char *argv[])
 		sprintf(confidenceMapThisLevelName, "%s/MutualSaliencyMap_level%d.nii.gz", folderNameForIntermediateResults, levelIndex);
 		printf("\n** save confidence map into %s **\n\n", confidenceMapThisLevelName);
 		WriteImage(confidenceMapThisLevelName, confidencemapthislevel, maskthislevel);
+		sprintf(confidenceMapThisLevelName, "%s/maskthislevel_level%d.nii.gz", folderNameForIntermediateResults, levelIndex);
+		printf("\n** save confidence map into %s **\n\n", confidenceMapThisLevelName);
+		WriteImage(confidenceMapThisLevelName, maskthislevel, maskthislevel);
+		sprintf(confidenceMapThisLevelName, "%s/maskthislevel_level%d_directwrite.nii.gz", folderNameForIntermediateResults, levelIndex);
+		printf("\n** save confidence map into %s **\n\n", confidenceMapThisLevelName);
+		WriteImage(confidenceMapThisLevelName, maskthislevel);
+
 		}
 	 
 	 
@@ -5481,8 +5488,10 @@ float calculateCorrelationCoefficientBetweenTwoFeatureVectors(float ****featureM
    varA  = sumAsq-2.0*aveA*sumA+(float)numFeatures*aveA*aveA;
    varB  = sumBsq-2.0*aveB*sumB+(float)numFeatures*aveB*aveB;
    
-   
-   cc = covAB/sqrt(varA*varB);
+   if ( (varA<=0)||(varB<=0) ) 
+	   cc=0.0;
+   else
+	   cc = covAB/sqrt(varA*varB);
    
    return cc;
 }

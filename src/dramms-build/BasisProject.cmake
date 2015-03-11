@@ -9,7 +9,7 @@
 # the inter-module dependencies
 # (see page Project Modularization of BASIS documentation).
 #
-# @sa http://www.rad.upenn.edu/sbia/software/basis/standard/modules/
+# @sa http://www.cbica.upenn.edu/sbia/software/basis/standard/modules/
 #
 # However, not only dependencies to other modules can be specified here,
 # but also dependencies on external packages. A more flexible alternative to
@@ -44,7 +44,7 @@
 # @endcode
 #
 # Copyright (c) 2011--2014 University of Pennsylvania. All rights reserved.<br />
-# See http://www.rad.upenn.edu/sbia/software/license.html or COPYING file.
+# See http://www.cbica.upenn.edu/sbia/software/license.html or COPYING file.
 #
 # Contact: SBIA Group <sbia-software at uphs.upenn.edu>
 ##############################################################################
@@ -58,11 +58,11 @@ basis_project (
   # meta-data
   NAME        DRAMMS
   PROVIDER    SBIA
-  VERSION     1.4.1  # always 0.0.0 in trunk, but should be the current version in braches and tags
+  VERSION     1.4.3  # always 0.0.0 in trunk, but should be the current version in braches and tags
   DESCRIPTION "Deformable Registration via Attribute Matching and Mutual-Saliency weighting"
   AUTHORS     "Yangming Ou" "Aristeidis Sotiras" "Andreas Schuh"
-  COPYRIGHT   "2011--2014 University of Pennsylvania"
-  LICENSE     "See http://www.rad.upenn.edu/sbia/software/license.html or COPYING file."
+  COPYRIGHT   "2011--2014 University of Pennsylvania. Since Jan. 2014, revisions were done while Yangming Ou is working at the A. A. Martinos Biomedical Imaging Center, Massachusetts General Hospital, Harvard Medical School."
+  LICENSE     "See http://www.cbica.upenn.edu/sbia/software/license.html or COPYING file."
   CONTACT     "SBIA Group <sbia-software at uphs.upenn.edu>"
   # --------------------------------------------------------------------------
   # dependencies

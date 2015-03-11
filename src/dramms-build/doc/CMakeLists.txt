@@ -15,8 +15,8 @@
 # supported by BASIS for the generation of documentation from plain text files
 # and in-source code comments.
 #
-# Copyright (c) 2012 University of Pennsylvania. All rights reserved.<br />
-# See http://www.rad.upenn.edu/sbia/software/license.html or COPYING file.
+# Copyright (c) 2012-2014 University of Pennsylvania. All rights reserved.<br />
+# See http://www.cbica.upenn.edu/sbia/software/license.html or COPYING file.
 #
 # Contact: SBIA Group <sbia-software at uphs.upenn.edu>
 ##############################################################################

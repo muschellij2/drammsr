@@ -1,4 +1,4 @@
-version=1.4.1
+version=1.4.3
 all:
 	mkdir -p ./"dramms-${version}-source";
 	cp -r ./dramms-build/* ./"dramms-${version}-source";

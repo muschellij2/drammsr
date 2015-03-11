@@ -438,11 +438,20 @@ bool ReadTransform(const char*       filename,
 static bool can_read_image(const nifti_1_header& hdr)
 {
     // major image dimensions, i.e., either 2D or 3D image
-    if (hdr.dim[1] <= 1 || hdr.dim[2] <= 1 || hdr.dim[3] < 0) return false;
+    if (hdr.dim[1] <= 1 || hdr.dim[2] <= 1 || hdr.dim[3] < 0) {
+	    DRAMMS_ERROR(" " << endl << "error: dim[1]<=1, or dim[2]<=1, or dim[3]<0. Note that we only accept 2D or 3D images having first two dimensions greater than 1, and the third dimension non-negative." << endl);
+	    return false;
+    }
     // image sequences (4D image) are mainly processed sequentially
-    if (hdr.dim[4] < 0) return false;
+    if (hdr.dim[4] < 0) {
+	    DRAMMS_ERROR("" << endl << "error: dim[4]<0. Note that the fourth dimension should be non-negative." << endl);
+	    return false;
+    }
     // unused dimensions may not be set
-    if (hdr.dim[6] > 1 || hdr.dim[7] > 1) return false;
+    if (hdr.dim[6] > 1 || hdr.dim[7] > 1) {
+	    DRAMMS_ERROR("error: dim[6] > 1 or dim[7] > 1.");
+	    return false;
+    }
     // datatype
     if (hdr.datatype != DT_UNSIGNED_CHAR &&
         hdr.datatype != DT_SIGNED_SHORT  &&
@@ -959,19 +968,19 @@ bool WriteNiftiSequence(const char* filename, const ConstSequence images, const 
     for (size_t i = 0; i < images.size(); i++) {
         switch (image->hdr.datatype) {
             case DT_UNSIGNED_CHAR:
-                write_image_data(fp, nim, img[i]->img.uc, mask, image->imgfmt == Image::FORMAT_FSL);
+                write_image_data(fp, nim, img[i]->img.uc, msk, image->imgfmt == Image::FORMAT_FSL);
                 break;
             case DT_SIGNED_SHORT:
-                write_image_data(fp, nim, img[i]->img.ss, mask, image->imgfmt == Image::FORMAT_FSL);
+                write_image_data(fp, nim, img[i]->img.ss, msk, image->imgfmt == Image::FORMAT_FSL);
                 break;
             case DT_UINT16:
-                write_image_data(fp, nim, img[i]->img.us, mask, image->imgfmt == Image::FORMAT_FSL);
+                write_image_data(fp, nim, img[i]->img.us, msk, image->imgfmt == Image::FORMAT_FSL);
                 break;
             case DT_SIGNED_INT:
-                write_image_data(fp, nim, img[i]->img.si, mask, image->imgfmt == Image::FORMAT_FSL);
+                write_image_data(fp, nim, img[i]->img.si, msk, image->imgfmt == Image::FORMAT_FSL);
                 break;
             case DT_FLOAT:
-                write_image_data(fp, nim, img[i]->img.fl, mask, image->imgfmt == Image::FORMAT_FSL);
+                write_image_data(fp, nim, img[i]->img.fl, msk, image->imgfmt == Image::FORMAT_FSL);
                 break;
             default:
                 znzclose(fp);

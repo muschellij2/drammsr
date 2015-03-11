@@ -2,7 +2,8 @@
  * @file  utilities.cxx
  * @brief Utility imaging functions.
  *
- * Copyright (c) 2011, 2012 University of Pennsylvania. All rights reserved.<br />
+ * Copyright (c) 2011-2014 University of Pennsylvania. All rights reserved.<br />
+ * Copyright (c) 2014 MGH, HMS. All rights reserved.<br />
  * See http://www.rad.upenn.edu/sbia/software/license.html or COPYING file.
  *
  * Contact: SBIA Group <sbia-software at uphs.upenn.edu>
@@ -399,9 +400,9 @@ Image* CastImage(const Image* image, short datatype, float min, float max, bool 
         Fvector3d pixdim;
         Ivector3d radius;
         Fvector3d sigma;
-        pixdim.x = image->hdr.pixdim[1];
-        pixdim.y = image->hdr.pixdim[2];
-        pixdim.z = image->hdr.pixdim[3];
+        pixdim.x = image->hdr.pixdim[1];  if (pixdim.x==0) pixdim.x=1;
+        pixdim.y = image->hdr.pixdim[2];  if (pixdim.y==0) pixdim.y=1;
+        pixdim.z = image->hdr.pixdim[3];  if (pixdim.z==0) pixdim.z=1;
         GetGaussParameters(pixdim, radius, sigma);
         Image* gauss = Gauss(radius, sigma);
         if (gauss == NULL) {
@@ -554,7 +555,7 @@ float* ComputeHistogram(const Image* image, int nbins, bool scale, float min, fl
     if (histo == NULL) return NULL;
 
     if (min >= max) GetIntensityRange(image, min, max);
-
+    
     float slope = 1;
     float inter = 0;
     if (scale && image->hdr.scl_slope != 0) {
@@ -618,6 +619,7 @@ int FindAdaptiveThreshold(float* histo, int nbins)
 		{
 		if (histo[ind]<0.05) maxPossible=ind;
 		}
+	// printf("maxPossible=%d\n", maxPossible);
 	for (ind = 0; ind < maxPossible; ind=ind+4) 
 		{
 		// printf("testing thresholding at %d-th bin\n", ind);
@@ -629,7 +631,7 @@ int FindAdaptiveThreshold(float* histo, int nbins)
 		//if ( ((histo[ind+12]-histo[ind])<0.065) && ((histo[ind+8]-histo[ind])<0.04) && ((histo[ind+4]-histo[ind])<0.02) && (histo[ind]<0.8) )  // Yangming changed on 11/01/2013, because the one used here, although completely and desirably removes background noise, could remove some internal low-intensity structures. Therefore, we chose a more conservative approach --- choose a low threshold that keeps almost all internal structures at the cost of possibly keeping some moderate level of background noise
 		if ( ((histo[ind+12]-histo[ind])<0.075) && ((histo[ind+8]-histo[ind])<0.07) && ((histo[ind+4]-histo[ind])<0.025) && (histo[ind]<0.6) )
 			{
-			if (maxPossible>28)
+			if ( (maxPossible>28)&&(maxPossible<40) )
 				ind_bin = ind;
 			else
 				{
@@ -1682,6 +1684,95 @@ Image* MultiplyTransform(const Image* D, float factor)
 
 
 // ---------------------------------------------------------------------------
+Image* SquareDeformation(const Image* D)
+{
+    assert(D != NULL);
+
+    int nx = D->region.nx;
+    int ny = D->region.ny;
+    int nz = D->region.nz;
+
+    // number of vector components, i.e., dimension of deformation field
+    const int N = D->GetNumberOfComponents();
+	
+    if (D->hdr.datatype != DT_FLOAT || nx <= 0 || ny <= 0 || nz <= 0 || N < 2 || N > 3 || (nz == 1 && N != 2)) {
+        BASIS_THROW(invalid_argument, "Invalid image given for estimation of squared deformation field!");
+    }
+
+    Image* sD = new Image(nx, ny, nz, D->hdr.datatype, N, D->imgfmt);
+    if (sD == NULL) return NULL;
+    sD->CopyTransform(D);
+    sD->CopyDataScaling(D);
+    sD->CopyMetaData(D);
+
+	for (int k = 0; k < nz; k++) {
+            for (int i = 0; i < nx; i++) {
+                for (int j = 0; j < ny; j++) {
+					sD->img.v3[k][i][j].x = D->img.v3[k][i][j].x * D->img.v3[k][i][j].x;
+					sD->img.v3[k][i][j].y = D->img.v3[k][i][j].y * D->img.v3[k][i][j].y;
+					sD->img.v3[k][i][j].z = D->img.v3[k][i][j].z * D->img.v3[k][i][j].z;
+				}
+            }
+		}
+		
+	return sD;
+}	
+
+
+// ---------------------------------------------------------------------------
+Image* SqrtDeformation(const Image* D)
+{
+    assert(D != NULL);
+
+    int nx = D->region.nx;
+    int ny = D->region.ny;
+    int nz = D->region.nz;
+
+    // number of vector components, i.e., dimension of deformation field
+    const int N = D->GetNumberOfComponents();
+	
+    if (D->hdr.datatype != DT_FLOAT || nx <= 0 || ny <= 0 || nz <= 0 || N < 2 || N > 3 || (nz == 1 && N != 2)) {
+        BASIS_THROW(invalid_argument, "Invalid image given for estimation of squared deformation field!");
+    }
+
+    Image* rD = new Image(nx, ny, nz, D->hdr.datatype, N, D->imgfmt);
+    if (rD == NULL) return NULL;
+    rD->CopyTransform(D);
+    rD->CopyDataScaling(D);
+    rD->CopyMetaData(D);
+    
+    float defx, defy, defz;
+
+	for (int k = 0; k < nz; k++) {
+            for (int i = 0; i < nx; i++) {
+                for (int j = 0; j < ny; j++) {
+					defx = D->img.v3[k][i][j].x;			
+					if ( defx < 0) 
+						rD->img.v3[k][i][j].x = 0;
+					else
+						rD->img.v3[k][i][j].x = sqrt(defx);
+					
+					
+					defy = D->img.v3[k][i][j].y;			
+					if ( defy < 0) 
+						rD->img.v3[k][i][j].y = 0;
+					else
+						rD->img.v3[k][i][j].y = sqrt(defy);
+					
+					defz = D->img.v3[k][i][j].z;			
+					if ( defz < 0) 
+						rD->img.v3[k][i][j].z = 0;
+					else
+						rD->img.v3[k][i][j].z = sqrt(defz);
+				}
+            }
+		}
+		
+	return rD;
+}	
+
+
+// ---------------------------------------------------------------------------
 Image::Transform DivideTransform(const Image::Transform& T, float factor)
 {
 	Image::Transform dT;
@@ -2057,7 +2148,7 @@ Image* InvertTransform(const Image* D, int num_samples, int boundary)
 
 // ---------------------------------------------------------------------------
 // added on 1/13/2014, implementation of Chen et al, "A simple fixed-point approach to invert a deformation field,” Med. Phys., vol.35, no. 1, pp. 81–88, 2008.
-Image* InvertTransformChen(const Image* D)
+Image* InvertTransformChen(const Image* D, Fvector3d& maxAbs)
 {
     assert(D != NULL);
 	
@@ -2067,8 +2158,11 @@ Image* InvertTransformChen(const Image* D)
     int ny = D->region.ny;
     int nz = D->region.nz;	// size of reverse deformation field - will be increased below
 	int N  = D->GetNumberOfComponents(); // number of vector components, i.e., dimension of deformation field
-	int boundary = 10;
 	int maxIter=100;
+	Ivector3d boundary;
+	boundary.x = static_cast<int>(1.2*maxAbs.x);
+	boundary.y = static_cast<int>(1.2*maxAbs.y);
+	boundary.z = static_cast<int>(1.2*maxAbs.z);
 	
 	// -----------------------------------------------------------------------
     // "extend" input deformation field - extrapolation done on-the-fly by
@@ -2078,28 +2172,145 @@ Image* InvertTransformChen(const Image* D)
     //       deformation field at the boundary as displacments extrapolated
     //       from the input deformation field can have an impact to the
     //       reverse deformation field inside the original image domain.
-    int Nx = boundary + nx + boundary;
-    int Ny = boundary + ny + boundary;
-    int Nz = boundary + nz + boundary;
+    int Nx = boundary.x + nx + boundary.x;
+    int Ny = boundary.y + ny + boundary.y;
+    int Nz = boundary.z + nz + boundary.z;
+    //cout << "Nx, Ny, Nz = " << Nx << ", " << Ny << ", " << Nz << endl;
+    //cout << "nx, ny, nz = " << nx << ", " << ny << ", " << nz << endl; 
 	
+    // the extended (padded, or extrapolated) deformation
+    Image* Dext  = new Image(Nx, Ny, Nz, D->hdr.datatype, N, D->imgfmt);
+    if (Dext == NULL) return NULL;
+    Dext->CopyTransform(D);
+    Dext->CopyDataScaling(D);
+    Dext->CopyMetaData(D);
+
+    // inverse of the extended deformation
+    Image* Dext_inv = new Image(Nx, Ny, Nz, D->hdr.datatype, N, D->imgfmt);
+    if (Dext_inv == NULL) return NULL;
+    Dext_inv->CopyTransform(D);
+    Dext_inv->CopyDataScaling(D);
+    Dext_inv->CopyMetaData(D);
+
+    // inverse of the original deformation
     Image* D_inv = new Image(nx, ny, nz, D->hdr.datatype, N, D->imgfmt);
     if (D_inv == NULL) return NULL;
     D_inv->CopyTransform(D);
     D_inv->CopyDataScaling(D);
     D_inv->CopyMetaData(D);
 	
-	vector<float> v;
+	vector<float> v(N);
 	float dx, dy, dz;
+
+    // ensemble the extended deformation
+    int z1 = boundary.z;
+    int z2 = boundary.z + nz -1;
+    int x1 = boundary.x;
+    int x2 = boundary.x + nx -1;
+    int y1 = boundary.y;
+    int y2 = boundary.y + ny -1;
+    int iCeil, iFloor, jCeil, jFloor, kCeil, kFloor;
+    int wia, wib, wja, wjb, wka, wkb;
+    vector<float> v1, v2, v3, v4, v5, v6, v7, v8;
+
+    for (int k = 0; k < Nz; k++) {
+      for (int i = 0; i < Nx; i++) {
+        for (int j = 0; j < Ny; j++) {
+		// determine Floor, Ceil and weights
+		if ( k < z1 ) {
+			kFloor = z1;
+			kCeil  = z1 + 1;  if (kCeil>z2) kCeil=z2;			
+		}
+		else if ( k > z2 ) {
+			kFloor = z2 - 1;  if (kFloor<z1) kFloor=z1;  
+			kCeil  = z2;			
+		}
+		else {
+			kFloor = k;
+			kCeil  = k+1;     if (kCeil>z2) kCeil=z2;
+		}
+		wka    = k     - kFloor;
+		wkb    = kCeil - k     ;
+		if ( (wka==wkb)&&(wka==0) )   wkb = wkb + 1;
+			
+		if ( i < x1 ) {
+			iFloor = x1;
+			iCeil  = x1 + 1;  if (iCeil>x2) iCeil=x2;
+		}
+		else if ( i > x2 ) {
+			iFloor = x2 - 1;  if (iFloor<x1) iFloor=x1;
+			iCeil  = x2;
+		}
+		else {
+			iFloor = i;
+			iCeil  = i+1;     if (iCeil>x2) iCeil=x2;
+		}
+		wia    = i     - iFloor;
+		wib    = iCeil - i     ;
+		if ( (wia==wib)&&(wia==0) )  wib = wib + 1;
+
+		if ( j < y1 ) {
+			jFloor = y1;
+			jCeil  = y1 + 1;  if (jCeil>y2) jCeil=y2;
+		}
+		else if ( j > y2 ) {
+			jFloor = y2 - 1;  if (jFloor<y1) jFloor=y1;
+			jCeil  = y2;
+		}
+		else {
+			jFloor = j;
+			jCeil  = j+1;     if (jCeil>y2) jCeil=y2;
+		}
+		wja    = j     - jFloor;
+		wjb    = jCeil - j     ;
+		if ( (wja==wjb)&&(wja==0) )   wjb = wjb + 1;
+  
+		// interpolate or exterpolate
+if (iCeil-boundary.x > nx-1)  cout << "i=" << i << ", iCeil = " << iCeil << ", iFloor = " << iFloor << ", boundary.x = " << boundary.x << endl;
+if (jCeil-boundary.y > ny-1)  cout << "j=" << j << ", jCeil = " << jCeil << ", jFloor = " << jFloor << ", boundary.y = " << boundary.y << endl;
+if (kCeil-boundary.z > nz-1)  cout << "k=" << k << ", kCeil = " << kCeil << ", kFloor = " << kFloor << ", boundary.z = " << boundary.z << endl;
+
+//cout << "mskip" << endl << endl;
+
+//cout << "i=" << i << ", iCeil = " << iCeil << ", iFloor = " << iFloor << ", boundary.x = " << boundary.x << endl;
+//cout << "j=" << j << ", jCeil = " << jCeil << ", jFloor = " << jFloor << ", boundary.y = " << boundary.y << endl;
+//cout << "k=" << k << ", kCeil = " << kCeil << ", kFloor = " << kFloor << ", boundary.z = " << boundary.z << endl;
+		D->get(iCeil -boundary.x, jCeil -boundary.y, kCeil -boundary.z, v1 ); 
+                D->get(iCeil -boundary.x, jCeil -boundary.y, kFloor-boundary.z, v2 );
+		D->get(iCeil -boundary.x, jFloor-boundary.y, kCeil -boundary.z, v3 );
+		D->get(iCeil -boundary.x, jFloor-boundary.y, kFloor-boundary.z, v4 );
+		D->get(iFloor-boundary.x, jCeil -boundary.y, kCeil -boundary.z, v5 );
+		D->get(iFloor-boundary.x, jCeil -boundary.y, kFloor-boundary.z, v6 );
+		D->get(iFloor-boundary.x, jFloor-boundary.y, kCeil -boundary.z, v7 );
+		D->get(iFloor-boundary.x, jFloor-boundary.y, kFloor-boundary.z, v8 );
+
+		for (int n=0; n<N; n++) {
+			v[n] =  wia * wja * wka * v1[n] +  
+                       		wia * wja * wkb * v2[n] + 
+		       		wia * wjb * wka * v3[n] + 
+		       		wia * wjb * wkb * v4[n] + 
+  		       		wib * wja * wka * v5[n] + 
+		       		wib * wja * wkb * v6[n] + 
+		       		wib * wjb * wka * v7[n] + 
+ 		       		wib * wjb * wkb * v8[n];
+		}
+
+		Dext->set(i,j,k,v);
+          }
+        }
+      }
 	
-	// calculate inverse deformation
-	for (int k = 0; k < nz; k++) {
-        for (int i = 0; i < nx; i++) {
-            for (int j = 0; j < ny; j++) {
+
+      // calculate inverse deformation of D_ext
+      cout << "start calculating the inverse deformation field. This may take a couple of minutes, or as long as tens of minutes..." << endl;
+      for (int k = 0; k < Nz; k++) {
+        for (int i = 0; i < Nx; i++) {
+            for (int j = 0; j < Ny; j++) {
 				dx = 0.0f;
 				dy = 0.0f;
 				dz = 0.0f; // initialize
 				for (int iter = 0; iter < maxIter; iter++) {
-					D->get(i+dx, j+dy, k+dz, v);
+					Dext->get(i+dx, j+dy, k+dz, v);
 					if ( fabs(dx+v[0])<0.001 && fabs(dy+v[1])<0.001 && fabs(dz+v[2])<0.001 ) { // converged
 						dx = -v[0];
 						dy = -v[1];
@@ -2112,14 +2323,25 @@ Image* InvertTransformChen(const Image* D)
 						dz = -v[2];
 					}
                 }
-				D_inv->img.v3[k][i][j].x = dx;
-				D_inv->img.v3[k][i][j].y = dy;
-				D_inv->img.v3[k][i][j].z = dz;
+				Dext_inv->img.v3[k][i][j].x = dx;
+				Dext_inv->img.v3[k][i][j].y = dy;
+				Dext_inv->img.v3[k][i][j].z = dz;
 			}
 		}
 	}
+
+      // get the inverse deformation the original D
+      for (int k=0; k<nz; k++)
+        for (int i=0; i<nx; i++)
+          for (int j=0; j<ny; j++) {
+		Dext_inv->get(i+boundary.x, j+boundary.y, k+boundary.z, v);
+		D_inv->img.v3[k][i][j].x = v[0];
+		D_inv->img.v3[k][i][j].y = v[1];
+		D_inv->img.v3[k][i][j].z = v[2];
+		}
+
 	
-	return D_inv;
+      return D_inv;
 }
  
  
@@ -2172,6 +2394,15 @@ Image* ConcatenateTransforms(const Image::Header&    A,
     if (D_out == NULL) return NULL;
     D_out->CopyTransform(D);
     D_out->CopyMetaData (D);
+
+    // verify and correct if necessary the pixdim (Yangming added on 7.20.2014, since some 2D images may have pixdm[3]=0, which needs to be changed to 1.0 for the following computations to be valid).
+    float pA1;  if (A.pixdim[1]<=0) pA1=1.0; else pA1=A.pixdim[1];
+    float pA2;  if (A.pixdim[2]<=0) pA2=1.0; else pA2=A.pixdim[2];
+    float pA3;  if (A.pixdim[3]<=0) pA3=1.0; else pA3=A.pixdim[3];
+    float pB1;  if (B.pixdim[1]<=0) pB1=1.0; else pB1=B.pixdim[1];
+    float pB2;  if (B.pixdim[2]<=0) pB2=1.0; else pB2=B.pixdim[2];
+    float pB3;  if (B.pixdim[3]<=0) pB3=1.0; else pB3=B.pixdim[3];
+
     // prepare linear transformation required for composition
     //
     // NOTE: The affine transformation obtained by FLIRT is in world coordinates,
@@ -2185,9 +2416,9 @@ Image* ConcatenateTransforms(const Image::Header&    A,
     //       of an image while reading the image data if it is stored in
     //       neurological order (positive determinant of qform/sfrom).
     Image::Transform vox2mm = IdentityTransform();
-    vox2mm.m[0][0] = B.pixdim[1];
-    vox2mm.m[1][1] = B.pixdim[2];
-    vox2mm.m[2][2] = B.pixdim[3];
+    vox2mm.m[0][0] = pB1; //B.pixdim[1];
+    vox2mm.m[1][1] = pB2; //B.pixdim[2];
+    vox2mm.m[2][2] = pB3; //B.pixdim[3];
     if (GetLeftRightOrder(B, D->imgfmt) == Image::LR_NEUROLOGICAL) {
         Image::Transform swap = IdentityTransform();
         if (D->imgfmt == Image::FORMAT_DRAMMS) {
@@ -2200,9 +2431,9 @@ Image* ConcatenateTransforms(const Image::Header&    A,
         vox2mm = ConcatenateTransforms(swap, vox2mm);
     }
     Image::Transform mm2vox = IdentityTransform();
-    mm2vox.m[0][0] = 1.0f / A.pixdim[1];
-    mm2vox.m[1][1] = 1.0f / A.pixdim[2];
-    mm2vox.m[2][2] = 1.0f / A.pixdim[3];
+    mm2vox.m[0][0] = 1.0f / pA1;  //A.pixdim[1];
+    mm2vox.m[1][1] = 1.0f / pA2;  //A.pixdim[2];
+    mm2vox.m[2][2] = 1.0f / pA3;  //A.pixdim[3];
     if (GetLeftRightOrder(A, D->imgfmt) == Image::LR_NEUROLOGICAL) {
         Image::Transform swap = IdentityTransform();
         if (D->imgfmt == Image::FORMAT_DRAMMS) {
@@ -2301,12 +2532,12 @@ Image* ConcatenateTransforms(const Image* D1, const Image* D2)
                 kFloor = static_cast<int>(fmax(fmin(floor(kk), static_cast<float>(nz1 - 1) ), 0.0f));
                 kCeil  = static_cast<int>(fmax(fmin(ceil (kk), static_cast<float>(nz1 - 1) ), 0.0f));
 
-                if ((iFloor == iCeil) && (iFloor != (nx1 - 1))) iCeil  += 1;
-                if ((iFloor == iCeil) && (iFloor == (nx1 - 1))) iFloor -= 1;
-                if ((jFloor == jCeil) && (jFloor != (ny1 - 1))) jCeil  += 1;
-                if ((jFloor == jCeil) && (jFloor == (ny1 - 1))) jFloor -= 1;
-                if ((kFloor == kCeil) && (kFloor != (nz1 - 1))) kCeil  += 1;
-                if ((kFloor == kCeil) && (kFloor == (nz1 - 1))) kFloor -= 1;
+                if ((iFloor == iCeil) && (iFloor != (nx1 - 1)) && (nx1 > iCeil+1)) iCeil  += 1;
+                if ((iFloor == iCeil) && (iFloor == (nx1 - 1)) && (nx1 > 1))       iFloor -= 1;
+                if ((jFloor == jCeil) && (jFloor != (ny1 - 1)) && (ny1 > jCeil+1)) jCeil  += 1;
+                if ((jFloor == jCeil) && (jFloor == (ny1 - 1)) && (ny1 > 1))       jFloor -= 1;
+                if ((kFloor == kCeil) && (kFloor != (nz1 - 1)) && (nz1 > kCeil+1)) kCeil  += 1;
+                if ((kFloor == kCeil) && (kFloor == (nz1 - 1)) && (nz1 > 1))       kFloor -= 1;
 
                 // get input vectors of first field to interpolate
                 D1->get(iCeil,  jCeil,  kCeil,  v1CCC);
@@ -2654,7 +2885,9 @@ Image* ApplyTransform(const Image* image, const Image* deffield, bool interpolat
     if (deffield->hdr.datatype != DT_FLOAT) {
         BASIS_THROW(invalid_argument, "Data type of deformation field must be DT_FLOAT32!")
     }
-    if ((image->region.nz <= 1 && deffield->hdr.dim[5] != 2) || (image->region.nz > 1 && deffield->hdr.dim[5] != 3)) {
+    //if ((image->region.nz <= 1 && deffield->hdr.dim[5] != 2) || (image->region.nz > 1 && deffield->hdr.dim[5] != 3)) {
+    // on 1/4/2014, we changed 2D deformation format to have dim[5]=3 and dim[3]=1 instead of dim[5]=2
+    if ((image->region.nz <= 1 && deffield->hdr.dim[5] != 3) || (image->region.nz > 1 && deffield->hdr.dim[5] != 3)) {
         BASIS_THROW(invalid_argument, "Dimension of displacement vectors does not match dimension of input image!");
     }
     if (image->imgfmt != deffield->imgfmt) {

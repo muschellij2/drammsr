@@ -8,6 +8,7 @@
  * as they do not apply to affine transformation matrices.
  *
  * Copyright (c) 2012-2014 University of Pennsylvania. All rights reserved.<br />
+ * Copyright (c) 2014 Massachusetts General Hospital, Harvard Medical School.<br />
  * See http://www.rad.upenn.edu/sbia/software/license.html or COPYING file.
  *
  * Contact: SBIA Group <sbia-software at uphs.upenn.edu>
@@ -35,7 +36,7 @@ using namespace dramms;
 // ===========================================================================
 
 // ---------------------------------------------------------------------------
-void PrintDisplacementQuantities(Image* deffield)
+Fvector3d PrintDisplacementQuantities(Image* deffield)
 {
 	const int N = deffield->GetNumberOfComponents();
 	cout << "The voxel-wise displacement vector has " <<  N << " components." << endl;
@@ -43,6 +44,8 @@ void PrintDisplacementQuantities(Image* deffield)
     float         maxmag; // maximum magnitude of displacement
     vector<float> min(N); // minimum displacement
     vector<float> max(N); // maximum displacement
+    Fvector3d     maxAbs;
+    float         m, M;
 
     maxmag = numeric_limits<float>::min();
     for (int n = 0; n < N; n++) {
@@ -116,6 +119,21 @@ void PrintDisplacementQuantities(Image* deffield)
         cout << " displacement of ";
         cout << max[n] << endl;
     }
+
+    m = fabs(min[0]);
+    M = fabs(max[0]);
+    maxAbs.x = M > m? M: m;
+    m = fabs(min[1]);
+    M = fabs(max[1]);
+    maxAbs.y = M > m? M: m;
+    if ( N<3 ) maxAbs.z = 0;
+    else {
+	m = fabs(min[2]);
+    	M = fabs(max[2]);
+    	maxAbs.z = M > m? M: m;
+	} 
+
+    return maxAbs;
 }
 
 // ===========================================================================
@@ -153,7 +171,7 @@ int main(int argc, char* argv[])
 
     // -----------------------------------------------------------------------
     // operation visitors
-    const string operations = "cmdi"; // one unique character for each
+    const string operations = "cmdisr"; // one unique character for each
                                     // implemented operation
 
     map<char, RecordOperationVisitor> record_operation_visitor;
@@ -176,7 +194,16 @@ int main(int argc, char* argv[])
             "Multiply the components of the input deformation by a user-specified number.",
             false, "<float>", 1, false,
             &record_operation_visitor['m']);
+
+	MultiSwitchArg square("s", "square",
+	    "square the components of the input deformation in each dimension.",
+	    0, &record_operation_visitor['s']);
 	
+
+	MultiSwitchArg sqrt("r", "sqrt",
+	    "calculate the square root of the components of the input deformation in each dimension.",
+	    0, &record_operation_visitor['r']);
+
 	MultiStringArg divide("d", "divide",
             "Divide the components of the input deformation by a user-specified number.",
             false, "<float>", 1, false,
@@ -209,10 +236,10 @@ int main(int argc, char* argv[])
         examples.push_back("EXENAME -c 23.4,42,33 def.nii"
                            "\nReports the displacement of the voxel at [23.4, 42, 33].");
 
-        examples.push_back("EXENAME -i affine.xfm"
+        examples.push_back("EXENAME -i affine.xfm inv_affine.xfm"
                            "\nComputes the inverse affine transformation.");
 
-        examples.push_back("EXENAME -i def.nii"
+        examples.push_back("EXENAME -i def.nii invdef.nii"
                            "\nComputes the inverse deformation field.");
 						   
 		examples.push_back("EXENAME -m 0.5 def.nii def_out.nii.gz"
@@ -242,8 +269,10 @@ int main(int argc, char* argv[])
 
         cmd.add(coord);
         cmd.add(invert);
-		cmd.add(multiply);
-		cmd.add(divide);
+	cmd.add(multiply);
+	cmd.add(square);
+	cmd.add(sqrt);
+	cmd.add(divide);
         cmd.add(verbose);
         cmd.add(input_file);
         cmd.add(output_file);
@@ -279,7 +308,7 @@ int main(int argc, char* argv[])
         // if no operation was specified, simply print quantities of transformation
         if (ops.empty()) {
             if (deformation) {
-                PrintDisplacementQuantities(deformation);
+                Fvector3d maxAbs = PrintDisplacementQuantities(deformation);
             } else {
                 cout.precision(5);
                 for (int r = 0; r < 4; r++) {
@@ -335,7 +364,8 @@ int main(int argc, char* argv[])
                     case 'i':
                         {
                             if (deformation) {
-                                Image* inverse_deformation = InvertTransformChen(deformation);
+				Fvector3d maxAbs = PrintDisplacementQuantities(deformation);
+                                Image* inverse_deformation = InvertTransformChen(deformation, maxAbs);
                                 if (inverse_deformation == NULL) {
                                     cerr << "Failed to allocate memory for inverse deformation field!" << endl;
                                     ok = false;
@@ -350,7 +380,7 @@ int main(int argc, char* argv[])
                             modified = true;
                         }
                         break;
-					// -------------------------------------------------------
+		    // -------------------------------------------------------
                     // multiply transformation by a user-specified number
                     case 'm':
                         {
@@ -377,7 +407,47 @@ int main(int argc, char* argv[])
                             modified = true;
                         }
                         break;
-					// -------------------------------------------------------
+		    // ----------------------------------------------------
+		    // square a deformation in each component
+		    case 's':
+			{
+			    if (deformation) {
+                                Image* squared_deformation = SquareDeformation(deformation);
+                                if (squared_deformation == NULL) {
+                                    cerr << "Failed to allocate memory for the squared deformation field!" << endl;
+                                    ok = false;
+                                    break;
+                                }
+                                delete deformation;
+                                deformation = squared_deformation;
+                            } else {
+                                cerr << "the SQUARE operator only applies to deformation, not affine transformation." << endl;
+                            }
+
+                            modified = true;
+			}		
+			break;
+			// -------------------------------------------------------
+		    // sqrt of a deformation in each component
+		    case 'r':
+			{
+			    if (deformation) {
+                                Image* sqrt_deformation = SqrtDeformation(deformation);
+                                if (sqrt_deformation == NULL) {
+                                    cerr << "Failed to allocate memory for the sqrt deformation field!" << endl;
+                                    ok = false;
+                                    break;
+                                }
+                                delete deformation;
+                                deformation = sqrt_deformation;
+                            } else {
+                                cerr << "the SQRT operator only applies to deformation, not affine transformation." << endl;
+                            }
+
+                            modified = true;
+			}		
+			break;
+			// ------------------------------------------------------
                     // divide transformation by a user-specified number
                     case 'd':
                         {

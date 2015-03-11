@@ -5,7 +5,7 @@
   3600 Market Street, Suite 380
   Philadelphia, PA 19104
 
-  Web:   http://www.rad.upenn.edu/sbia/
+  Web:   http://www.cbica.upenn.edu/sbia/
   Email: sbia-software at uphs.upenn.edu
 
 
@@ -155,7 +155,7 @@ SBIA Contribution and Software License Agreement ("Agreement")
      AND AGAINST ANY AND ALL CLAIMS, SUITS, ACTIONS, DEMANDS AND JUDGMENTS ARISING
      THEREFROM.
 
-  6. None of the names, logos or trademarks of SBIA or any of SBIA's affiliates
+  6. None of the names, logos or trademarks of CBICA/SBIA or any of CBICA/SBIA's affiliates
      or any of the Contributors, or any funding agency, may be used to endorse
      or promote products produced in whole or in part by operation of the Software
      or derived from or based on the Software without specific prior written

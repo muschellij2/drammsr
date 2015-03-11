@@ -119,6 +119,9 @@ int main(int argc,char *argv[])
         nhdr2->dim   [3] = 1;
         nhdr2->pixdim[3] = 1.0f;
     }
+    if (nhdr2->pixdim[1]<=0) nhdr2->pixdim[1]=1;
+    if (nhdr2->pixdim[2]<=0) nhdr2->pixdim[2]=1;
+    if (nhdr2->pixdim[3]<=0) nhdr2->pixdim[3]=1;
 
 	if (checkFeatureImage==false)
 	{
@@ -128,9 +131,9 @@ int main(int argc,char *argv[])
 			(nhdr1->dim[3] == nhdr2->dim[3])) ShareImageSize = true;
 
 		bool ShareVoxelSize = false;
-		if ((nhdr1->pixdim[1] == nhdr2->pixdim[1]) && 
-			(nhdr1->pixdim[2] == nhdr2->pixdim[2]) &&
-			(nhdr1->pixdim[3] == nhdr2->pixdim[3])) ShareVoxelSize = true;
+		if ( fabs((nhdr1->pixdim[1]-nhdr2->pixdim[1])/nhdr2->pixdim[1])<0.005  && 
+			fabs((nhdr1->pixdim[2]-nhdr2->pixdim[2])/nhdr2->pixdim[2])<0.005 &&
+			fabs((nhdr1->pixdim[3]-nhdr2->pixdim[3])/nhdr2->pixdim[3])<0.005 ) ShareVoxelSize = true;
 
 		if ( (ShareImageSize==true)&&(ShareVoxelSize==true) ) {
 			//cout << "Two images share the same image and voxel sizes." << endl;
@@ -182,12 +185,12 @@ int main(int argc,char *argv[])
 			maxjB=0;
 		    for (j=0;j<dimy;j++)
 				{
-				if (imgA[k][i][j]>0) {
+				if (imgA[k][i][j]>12) {
 					countA++;
 					minjA=MIN(minjA,j); 
 					maxjA=MAX(maxjA,j);
 					}
-				if (imgB[k][i][j]>0) {
+				if (imgB[k][i][j]>12) {
 					countB++;
 					minjB=MIN(minjB,j); 
 					maxjB=MAX(maxjB,j);
