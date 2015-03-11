@@ -4,14 +4,31 @@
 \alias{dramms_jacobian}
 \title{Calculate Jacobian Image}
 \usage{
-dramms_jacobian(def, outimg = NULL, retimg = FALSE)
+dramms_jacobian(source, target, def, outimg = NULL, retimg = FALSE,
+  smooth_def = FALSE, smooth_jacobian = FALSE, cut_jacobian = FALSE,
+  xy_switch_off = FALSE, log_jacobian = FALSE)
 }
 \arguments{
+\item{source}{Filename (or nifti) to match to target}
+
+\item{target}{Filename (or nifti) to match source to to target}
+
 \item{def}{input deformation field}
 
 \item{outimg}{Output deformation filename}
 
 \item{retimg}{return nifti object versus output image}
+
+\item{smooth_def}{smooth deformation field before calculating}
+
+\item{smooth_jacobian}{smooth calculated Jacobian map}
+
+\item{cut_jacobian}{cut-off Jacobian values at 0}
+
+\item{xy_switch_off}{turn x-y switch off
+(default: on for default input deformation in DRAMMS format)}
+
+\item{log_jacobian}{take log of jacobian determinant}
 }
 \value{
 If \code{retimg = TRUE}, a \code{nifti} object.

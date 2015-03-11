@@ -11,6 +11,8 @@
 #' @export
 #' @return If \code{retimg = TRUE}, a \code{nifti} object.  
 #' If \code{retimg = FALSE}, a the filename of the output image.
+#' @note As DRAMMS use FLIRT to do affine transformations, please use
+#' \code{\link{flirt}} to apply transformation of affine .mat file.
 dramms_warp <- function(
   source, # Filename (or nifti) to apply deformation field
   def = NULL, # output deformation field

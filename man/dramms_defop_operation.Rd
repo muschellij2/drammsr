@@ -4,15 +4,16 @@
 \alias{dramms_defop_operation}
 \title{Run DRAMMS Multiplication or Division}
 \usage{
-dramms_defop_operation(def = NULL, factor = 1, operation = c("multiply",
-  "divide"), outimg = NULL, retimg = FALSE)
+dramms_defop_operation(def = NULL, factor = NULL,
+  operation = c("multiply", "divide", "square", "sqrt"), outimg = NULL,
+  retimg = FALSE)
 }
 \arguments{
 \item{def}{deformation field}
 
 \item{factor}{float to multiply or divide}
 
-\item{operation}{Operation to perform: multiply or divide}
+\item{operation}{Operation to perform: multiply, divide, square, or sqrt}
 
 \item{outimg}{Output filename}
 

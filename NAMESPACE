@@ -2,6 +2,8 @@
 
 export(dramms)
 export(dramms_cmd_maker)
+export(dramms_combine)
+export(dramms_convert)
 export(dramms_defop_invert)
 export(dramms_defop_operation)
 export(dramms_jacobian)

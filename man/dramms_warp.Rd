@@ -23,4 +23,8 @@ If \code{retimg = FALSE}, a the filename of the output image.
 \description{
 Runs DRAMMS Warping on source and target
 }
+\note{
+As DRAMMS use FLIRT to do affine transformations, please use
+\code{\link{flirt}} to apply transformation of affine .mat file.
+}
 
