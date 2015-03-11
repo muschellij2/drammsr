@@ -5,6 +5,7 @@
 #' @param source Filename (or nifti) to match to target
 #' @param def input deformation field
 #' @param outimg Output filename
+#' @param interpolation Trilinear or nearest-neighbor interpolation for warping
 #' @param retimg return nifti object versus output image
 #' @import fslr 
 #' @import oro.nifti

@@ -14,6 +14,8 @@ dramms_warp(source, def = NULL, outimg = NULL,
 
 \item{outimg}{Output filename}
 
+\item{interpolation}{Trilinear or nearest-neighbor interpolation for warping}
+
 \item{retimg}{return nifti object versus output image}
 }
 \value{

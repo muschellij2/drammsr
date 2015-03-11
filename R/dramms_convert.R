@@ -2,7 +2,6 @@
 #' @title Run DRAMMS Conversion
 #'
 #' @description Convert DRAMMS deformation to new output
-#' @param source Filename (or nifti) to match to target
 #' @param indef input deformation field
 #' @param outimg output deformation field fielname
 #' @param retimg return nifti object versus output image

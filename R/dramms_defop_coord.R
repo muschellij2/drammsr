@@ -5,7 +5,7 @@
 #' @param coord Character or vector to be pasted of coordinates
 #' @export
 #' @return A character of the result of the system command.
-dramms_defop_invert <- function(
+dramms_defop_coord <- function(
   def = NULL, # output deformation field
   coord = NULL
 ){

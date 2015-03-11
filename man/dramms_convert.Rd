@@ -31,8 +31,6 @@ vectors, or x/y/z displacements}
 
 \item{change_3}{Change deformation field vectors to three-dimensional
 displacements}
-
-\item{source}{Filename (or nifti) to match to target}
 }
 \value{
 If \code{retimg = TRUE}, a \code{nifti} object.
