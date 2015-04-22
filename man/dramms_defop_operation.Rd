@@ -5,7 +5,7 @@
 \title{Run DRAMMS Multiplication or Division}
 \usage{
 dramms_defop_operation(def = NULL, factor = NULL,
-  operation = c("multiply", "divide", "square", "sqrt"), outimg = NULL,
+  operation = c("multiply", "divide", "square", "sqrt"), outfile = NULL,
   retimg = FALSE)
 }
 \arguments{
@@ -15,7 +15,7 @@ dramms_defop_operation(def = NULL, factor = NULL,
 
 \item{operation}{Operation to perform: multiply, divide, square, or sqrt}
 
-\item{outimg}{Output filename}
+\item{outfile}{Output filename}
 
 \item{retimg}{return nifti object versus output image}
 }

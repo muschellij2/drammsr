@@ -4,7 +4,7 @@
 #' @param source Filename (or nifti) to match to target
 #' @param target Filename (or nifti) to match source to to target
 #' @param def input deformation field
-#' @param outimg Output deformation filename
+#' @param outfile Output deformation filename
 #' @param retimg return nifti object versus output image
 #' @param smooth_def smooth deformation field before calculating
 #' @param smooth_jacobian smooth calculated Jacobian map
@@ -21,7 +21,7 @@ dramms_jacobian <- function(
   source, # Filename (or nifti) to match to target
   target, # Filename (or nifti) to match source to to target  
   def, # output deformation field
-  outimg = NULL, # Output filename
+  outfile = NULL, # Output filename
   retimg = FALSE, # return nifti object versus output image
   smooth_def = FALSE, # smooth deformation field before calculating
   smooth_jacobian = FALSE, # smooth calculated Jacobian map
@@ -32,7 +32,7 @@ dramms_jacobian <- function(
   source = checkimg(source)
   target = checkimg(target)
   def = checkimg(def)  
-  outimg = check_outfile(outfile = outimg, retimg = retimg, fileext = ".nii.gz")
+  outfile = check_outfile(outfile = outfile, retimg = retimg, fileext = ".nii.gz")
   
   repper = function(x, newval){
     stopifnot(inherits(x, "logical"))
@@ -50,7 +50,7 @@ dramms_jacobian <- function(
   log_jacobian = repper(log_jacobian, "-L")
   
   args = c(def, 
-           outimg,
+           outfile,
            "-f"=source, 
            "-t"=target,
            xy_switch_off,
@@ -68,8 +68,8 @@ dramms_jacobian <- function(
   }
   
   if (retimg){
-    img = readNIfTI(outimg, reorient=FALSE)
+    img = readNIfTI(outfile, reorient=FALSE)
     return(img)
   }
-  return(outimg)
+  return(outfile)
 }

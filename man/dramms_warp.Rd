@@ -4,7 +4,7 @@
 \alias{dramms_warp}
 \title{Run DRAMMS Warping}
 \usage{
-dramms_warp(source, def = NULL, outimg = NULL,
+dramms_warp(source, def = NULL, outfile = NULL,
   interpolation = c("trilinear", "nearest.neighbor"), retimg = FALSE)
 }
 \arguments{
@@ -12,7 +12,7 @@ dramms_warp(source, def = NULL, outimg = NULL,
 
 \item{def}{input deformation field}
 
-\item{outimg}{Output filename}
+\item{outfile}{Output filename}
 
 \item{interpolation}{Trilinear or nearest-neighbor interpolation for warping}
 

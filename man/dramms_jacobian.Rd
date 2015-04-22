@@ -4,7 +4,7 @@
 \alias{dramms_jacobian}
 \title{Calculate Jacobian Image}
 \usage{
-dramms_jacobian(source, target, def, outimg = NULL, retimg = FALSE,
+dramms_jacobian(source, target, def, outfile = NULL, retimg = FALSE,
   smooth_def = FALSE, smooth_jacobian = FALSE, cut_jacobian = FALSE,
   xy_switch_off = FALSE, log_jacobian = FALSE)
 }
@@ -15,7 +15,7 @@ dramms_jacobian(source, target, def, outimg = NULL, retimg = FALSE,
 
 \item{def}{input deformation field}
 
-\item{outimg}{Output deformation filename}
+\item{outfile}{Output deformation filename}
 
 \item{retimg}{return nifti object versus output image}
 

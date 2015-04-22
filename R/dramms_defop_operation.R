@@ -6,7 +6,7 @@
 #' @param factor float to multiply or divide
 #' @param operation Operation to perform: multiply, divide, square, or sqrt
 #' @param retimg return nifti object versus output image
-#' @param outimg Output filename 
+#' @param outfile Output filename 
 #' @import oro.nifti
 #' @import fslr
 #' @export
@@ -16,16 +16,13 @@ dramms_defop_operation <- function(
   def = NULL, # output deformation field
   factor = NULL,
   operation = c("multiply", "divide", "square", "sqrt"),
-  outimg = NULL, # Output filename
+  outfile = NULL, # Output filename
   retimg = FALSE # return nifti object versus output image
 ){
   source = checkimg(def)
   operation = match.arg(operation, c("multiply", "divide", "square", "sqrt"))
-  #   dramms --source sourceimage.hdr --target targetimage.nii
-  #   --outimg outimage.img --outdef outdef.nii.gz  
-  #   cmd = 
 
-  outimg = check_outfile(outfile = outimg, retimg = retimg)
+  outfile = check_outfile(outfile = outfile, retimg = retimg)
   
   ################
   # Check for factor or not
@@ -46,7 +43,7 @@ dramms_defop_operation <- function(
   ################
   args = c(factor, 
            def,
-           outimg)
+           outfile)
   names(args) = c(paste0("--", operation), rep("", length(args)-1))
   cmd = "dramms-defop"
   cmd = dramms_cmd_maker(cmd=cmd, args = args)
@@ -57,8 +54,8 @@ dramms_defop_operation <- function(
   }
   
   if (retimg){
-    img = readNIfTI(outimg, reorient=FALSE)
+    img = readNIfTI(outfile, reorient=FALSE)
     return(img)
   }
-  return(outimg)
+  return(outfile)
 }

@@ -4,7 +4,7 @@
 \alias{dramms_combine}
 \title{Combine DRAMMS Deformation}
 \usage{
-dramms_combine(indef1, indef2, outimg = NULL, retimg = FALSE,
+dramms_combine(indef1, indef2, outfile = NULL, retimg = FALSE,
   operation = c("concatenate", "add", "subtract", "mean"))
 }
 \arguments{
@@ -12,7 +12,7 @@ dramms_combine(indef1, indef2, outimg = NULL, retimg = FALSE,
 
 \item{indef2}{Input Deformation Field 2}
 
-\item{outimg}{output deformation field fielname}
+\item{outfile}{output deformation field fielname}
 
 \item{retimg}{return nifti object versus output image}
 

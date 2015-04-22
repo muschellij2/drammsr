@@ -4,7 +4,7 @@
 \alias{dramms_convert}
 \title{Run DRAMMS Conversion}
 \usage{
-dramms_convert(indef, outimg = NULL, retimg = FALSE, field_dim = NULL,
+dramms_convert(indef, outfile = NULL, retimg = FALSE, field_dim = NULL,
   field_pixdim = NULL, informat = c("DRAMMS", "ITK", "FSL"),
   outformat = c("DRAMMS", "ITK", "FSL"), outtype = c("field", "magnitude",
   "x", "y", "z"), change_3 = FALSE)
@@ -12,7 +12,7 @@ dramms_convert(indef, outimg = NULL, retimg = FALSE, field_dim = NULL,
 \arguments{
 \item{indef}{input deformation field}
 
-\item{outimg}{output deformation field fielname}
+\item{outfile}{output deformation field fielname}
 
 \item{retimg}{return nifti object versus output image}
 

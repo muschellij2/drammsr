@@ -4,7 +4,7 @@
 #' @description Combines DRAMMS deformations 
 #' @param indef1 Input Deformation Field 1
 #' @param indef2 Input Deformation Field 2
-#' @param outimg output deformation field fielname
+#' @param outfile output deformation field fielname
 #' @param retimg return nifti object versus output image
 #' @param operation Way to combine the deformations
 #' @import fslr 
@@ -15,13 +15,13 @@
 dramms_combine <- function(
   indef1, # input deformation field
   indef2, # input deformation field
-  outimg = NULL, # Output filename
+  outfile = NULL, # Output filename
   retimg = FALSE, # return nifti object versus output image
   operation = c("concatenate", "add", "subtract" ,"mean")
 ){
   indef1 = checkimg(indef1)
   indef2 = checkimg(indef2)
-  outimg = check_outfile(outfile = outimg, 
+  outfile = check_outfile(outfile = outfile, 
                          retimg = retimg, fileext = ".nii.gz")
   operation = match.arg(operation, c("concatenate", "add", "subtract" ,"mean"))
   operation = paste0("--", operation)
@@ -30,7 +30,7 @@ dramms_combine <- function(
   args = c(operation, 
            indef1, 
            indef2,
-           outimg)
+           outfile)
   names(args) = NULL
   cmd = "dramms-combine"
   cmd = dramms_cmd_maker(cmd=cmd, args = args)
@@ -41,8 +41,8 @@ dramms_combine <- function(
   }
   
   if (retimg){
-    img = readNIfTI(outimg, reorient=FALSE)
+    img = readNIfTI(outfile, reorient=FALSE)
     return(img)
   }
-  return(outimg)
+  return(outfile)
 }

@@ -4,7 +4,7 @@
 #' @description Runs dramms_defop with inversion on deformation
 #' @param def deformation field
 #' @param retimg return nifti object versus output image
-#' @param outimg Output filename 
+#' @param outfile Output filename 
 #' @import oro.nifti
 #' @import fslr
 #' @export
@@ -12,14 +12,14 @@
 #' If \code{retimg = FALSE}, a the filename of the output image.
 dramms_defop_invert <- function(
   def = NULL, # output deformation field
-  outimg = NULL, # Output filename
+  outfile = NULL, # Output filename
   retimg = FALSE # return nifti object versus output image
 ){
   source = checkimg(def)
-  outimg = check_outfile(outfile = outimg, retimg = retimg, fileext = ".nii.gz")
+  outfile = check_outfile(outfile = outfile, retimg = retimg, fileext = ".nii.gz")
   
   args = c("--invert"=def, 
-           outimg)
+           outfile)
   cmd = "dramms-defop"
   cmd = dramms_cmd_maker(cmd=cmd, args = args)
   
@@ -29,8 +29,8 @@ dramms_defop_invert <- function(
   }
   
   if (retimg){
-    img = readNIfTI(outimg, reorient=FALSE)
+    img = readNIfTI(outfile, reorient=FALSE)
     return(img)
   }
-  return(outimg)
+  return(outfile)
 }

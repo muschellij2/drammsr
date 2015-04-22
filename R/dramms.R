@@ -4,7 +4,7 @@
 #' @description Runs DRAMMS on source and target
 #' @param source Filename (or nifti) to match to target
 #' @param target Filename (or nifti) to match source to to target
-#' @param outimg Output filename
+#' @param outfile Output filename
 #' @param outdef output deformation field
 #' @param retimg return nifti object versus output image
 #' @import fslr 
@@ -23,17 +23,17 @@
 dramms <- function(
   source, # Filename (or nifti) to match to target
   target, # Filename (or nifti) to match source to to target
-  outimg = NULL, # Output filename
+  outfile = NULL, # Output filename
   outdef = NULL, # output deformation field
   retimg = FALSE # return nifti object versus output image
   ){
   source = checkimg(source)
   target = checkimg(target)
-  outimg = check_outfile(outfile = outimg, retimg = retimg, fileext = ".nii.gz")
+  outfile = check_outfile(outfile = outfile, retimg = retimg, fileext = ".nii.gz")
   
   args = c("--source"=source, 
            "--target"=target,
-           "--outimg"=outimg,
+           "--outimg"=outfile,
            "--outdef"=outdef)
   cmd = "dramms"
   cmd = dramms_cmd_maker(cmd=cmd, args = args)
@@ -44,8 +44,8 @@ dramms <- function(
   }
   
   if (retimg){
-    img = readNIfTI(outimg, reorient=FALSE)
+    img = readNIfTI(outfile, reorient=FALSE)
     return(img)
   }
-  return(outimg)
+  return(outfile)
 }

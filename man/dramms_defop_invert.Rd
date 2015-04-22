@@ -4,12 +4,12 @@
 \alias{dramms_defop_invert}
 \title{Run DRAMMS Deformation Inversion}
 \usage{
-dramms_defop_invert(def = NULL, outimg = NULL, retimg = FALSE)
+dramms_defop_invert(def = NULL, outfile = NULL, retimg = FALSE)
 }
 \arguments{
 \item{def}{deformation field}
 
-\item{outimg}{Output filename}
+\item{outfile}{Output filename}
 
 \item{retimg}{return nifti object versus output image}
 }

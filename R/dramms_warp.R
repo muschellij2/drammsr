@@ -4,7 +4,7 @@
 #' @description Runs DRAMMS Warping on source and target
 #' @param source Filename (or nifti) to match to target
 #' @param def input deformation field
-#' @param outimg Output filename
+#' @param outfile Output filename
 #' @param interpolation Trilinear or nearest-neighbor interpolation for warping
 #' @param retimg return nifti object versus output image
 #' @import fslr 
@@ -17,7 +17,7 @@
 dramms_warp <- function(
   source, # Filename (or nifti) to apply deformation field
   def = NULL, # output deformation field
-  outimg = NULL, # Output filename
+  outfile = NULL, # Output filename
   interpolation = c("trilinear", "nearest.neighbor"),
   retimg = FALSE # return nifti object versus output image
 ){
@@ -25,11 +25,11 @@ dramms_warp <- function(
   interpolation = match.arg(interpolation, c("trilinear", "nearest.neighbor"))
   interpolation = ifelse(interpolation == "nearest.neighbor", "-n", "")
   
-  outimg = check_outfile(outfile = outimg, retimg = retimg, fileext = ".nii.gz")
+  outfile = check_outfile(outfile = outfile, retimg = retimg, fileext = ".nii.gz")
     
   args = c(source, 
            def,
-           outimg,
+           outfile,
            interpolation)
   names(args) = NULL
   cmd = "dramms-warp"
@@ -41,8 +41,8 @@ dramms_warp <- function(
   }
   
   if (retimg){
-    img = readNIfTI(outimg, reorient=FALSE)
+    img = readNIfTI(outfile, reorient=FALSE)
     return(img)
   }
-  return(outimg)
+  return(outfile)
 }

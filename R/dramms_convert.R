@@ -3,7 +3,7 @@
 #'
 #' @description Convert DRAMMS deformation to new output
 #' @param indef input deformation field
-#' @param outimg output deformation field fielname
+#' @param outfile output deformation field fielname
 #' @param retimg return nifti object versus output image
 #' @param field_dim Dimensions of input deformation field or nifti filename to 
 #' get dimensions
@@ -22,7 +22,7 @@
 #' If \code{retimg = FALSE}, a the filename of the output image.
 dramms_convert <- function(
   indef, # input deformation field
-  outimg = NULL, # Output filename
+  outfile = NULL, # Output filename
   retimg = FALSE, # return nifti object versus output image
   field_dim = NULL,
   field_pixdim = NULL,
@@ -32,7 +32,7 @@ dramms_convert <- function(
   change_3 = FALSE #deformation field vectors to three-dimensional displacements
 ){
   indef = checkimg(indef)
-  outimg = check_outfile(outfile = outimg, retimg = retimg, fileext = ".nii.gz")
+  outfile = check_outfile(outfile = outfile, retimg = retimg, fileext = ".nii.gz")
   
   informat = match.arg(informat, c("DRAMMS", "ITK", "FSL"))
   outformat = match.arg(outformat, c("DRAMMS", "ITK", "FSL"))
@@ -51,14 +51,14 @@ dramms_convert <- function(
   field_dim = paste(field_dim, sep=",")
   field_pixdim = paste(field_pixdim, sep=",")
   
-  names(outimg) = outtype
+  names(outfile) = outtype
   args = c("-f"=informat,
            "-d"=field_dim,
            "-p"=field_pixdim,
            "-i"=indef, 
            "-F"=outformat,
            change_3,
-           outimg)
+           outfile)
   cmd = "dramms-convert"
   cmd = dramms_cmd_maker(cmd=cmd, args = args)
   
@@ -68,8 +68,8 @@ dramms_convert <- function(
   }
   
   if (retimg){
-    img = readNIfTI(outimg, reorient=FALSE)
+    img = readNIfTI(outfile, reorient=FALSE)
     return(img)
   }
-  return(outimg)
+  return(outfile)
 }

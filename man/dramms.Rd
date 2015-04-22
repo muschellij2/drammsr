@@ -4,14 +4,14 @@
 \alias{dramms}
 \title{Run DRAMMS}
 \usage{
-dramms(source, target, outimg = NULL, outdef = NULL, retimg = FALSE)
+dramms(source, target, outfile = NULL, outdef = NULL, retimg = FALSE)
 }
 \arguments{
 \item{source}{Filename (or nifti) to match to target}
 
 \item{target}{Filename (or nifti) to match source to to target}
 
-\item{outimg}{Output filename}
+\item{outfile}{Output filename}
 
 \item{outdef}{output deformation field}
 
