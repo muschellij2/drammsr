@@ -9,4 +9,4 @@ all:
 
 clean:
 	rm -rf ./"dramms-${version}-source";
-	rm -rf ../../../inst/dramms;
+	rm -rf ../inst/dramms/*;
