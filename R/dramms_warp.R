@@ -8,6 +8,7 @@
 #' @param interpolation Trilinear or nearest-neighbor interpolation for warping
 #' @param template Template used for argument -t if an affine transformed required
 #' @param retimg return nifti object versus output image
+#' @param verbose (logical) print out command before running
 #' @import fslr 
 #' @import oro.nifti
 #' @export
@@ -21,30 +22,36 @@ dramms_warp <- function(
   outfile = NULL, # Output filename
   interpolation = c("trilinear", "nearest.neighbor"),
   template = NULL,
-  retimg = FALSE # return nifti object versus output image
+  retimg = FALSE, # return nifti object versus output image
+  verbose = TRUE
 ){
   source = checkimg(source)
   interpolation = match.arg(interpolation, c("trilinear", "nearest.neighbor"))
   interpolation = ifelse(interpolation == "nearest.neighbor", "-n", "")
   
   outfile = check_outfile(outfile = outfile, retimg = retimg, fileext = ".nii.gz")
-    
-  args = c(source, 
+  template = checkimg(template)
+  
+  args = c(interpolation, source, 
            def,
-           outfile,
-           interpolation,
-           t = template)
+           outfile)
   names(args) = NULL
+  args = c("-t" = template, 
+           args)
   cmd = "dramms-warp"
-  cmd = dramms_cmd_maker(cmd=cmd, args = args)
+  cmd = dramms_cmd_maker(cmd = cmd, args = args)
+  
+  if (verbose) {
+    cat(cmd, "\n")
+  }
   
   res = system(cmd)
-  if (res != 0){
+  if (res != 0) {
     stop("DRAMMS command failed")
   }
   
-  if (retimg){
-    img = readNIfTI(outfile, reorient=FALSE)
+  if (retimg) {
+    img = readNIfTI(outfile, reorient = FALSE)
     return(img)
   }
   return(outfile)

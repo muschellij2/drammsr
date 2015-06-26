@@ -6,7 +6,7 @@
 \usage{
 dramms_warp(source, def = NULL, outfile = NULL,
   interpolation = c("trilinear", "nearest.neighbor"), template = NULL,
-  retimg = FALSE)
+  retimg = FALSE, verbose = TRUE)
 }
 \arguments{
 \item{source}{Filename (or nifti) to match to target}
@@ -20,6 +20,8 @@ dramms_warp(source, def = NULL, outfile = NULL,
 \item{template}{Template used for argument -t if an affine transformed required}
 
 \item{retimg}{return nifti object versus output image}
+
+\item{verbose}{(logical) print out command before running}
 }
 \value{
 If \code{retimg = TRUE}, a \code{nifti} object.

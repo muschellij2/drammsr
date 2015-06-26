@@ -5,7 +5,7 @@
 \title{Run DRAMMS}
 \usage{
 dramms(source, target, outfile = NULL, outdef = NULL, retimg = FALSE,
-  opts = NULL)
+  opts = NULL, verbose = TRUE)
 }
 \arguments{
 \item{source}{Filename (or nifti) to match to target}
@@ -19,6 +19,8 @@ dramms(source, target, outfile = NULL, outdef = NULL, retimg = FALSE,
 \item{retimg}{return nifti object versus output image}
 
 \item{opts}{Extra arguments to pass to \code{dramms}}
+
+\item{verbose}{(logical) print out command before running}
 }
 \value{
 If \code{retimg = TRUE}, a \code{nifti} object.

@@ -8,6 +8,7 @@
 #' @param outdef output deformation field
 #' @param retimg return nifti object versus output image
 #' @param opts Extra arguments to pass to \code{dramms}
+#' @param verbose (logical) print out command before running 
 #' @import fslr 
 #' @import oro.nifti
 #' @export
@@ -27,27 +28,32 @@ dramms <- function(
   outfile = NULL, # Output filename
   outdef = NULL, # output deformation field
   retimg = FALSE, # return nifti object versus output image
-  opts = NULL
+  opts = NULL,
+  verbose = TRUE
   ){
   source = checkimg(source)
   target = checkimg(target)
   outfile = check_outfile(outfile = outfile, retimg = retimg, fileext = ".nii.gz")
   
-  args = c("--source"=source, 
-           "--target"=target,
-           "--outimg"=outfile,
-           "--outdef"=outdef,
+  args = c("--source" = source, 
+           "--target" = target,
+           "--outimg" = outfile,
+           "--outdef" = outdef,
            opts)
   cmd = "dramms"
-  cmd = dramms_cmd_maker(cmd=cmd, args = args)
+  cmd = dramms_cmd_maker(cmd = cmd, args = args)
 
+  if (verbose) {
+    cat(cmd, "\n")
+  }  
   res = system(cmd)
-  if (res != 0){
+  
+  if (res != 0) {
     stop("DRAMMS command failed")
   }
   
-  if (retimg){
-    img = readNIfTI(outfile, reorient=FALSE)
+  if (retimg) {
+    img = readNIfTI(outfile, reorient = FALSE)
     return(img)
   }
   return(outfile)
