@@ -4,7 +4,8 @@
 \alias{dramms}
 \title{Run DRAMMS}
 \usage{
-dramms(source, target, outfile = NULL, outdef = NULL, retimg = FALSE)
+dramms(source, target, outfile = NULL, outdef = NULL, retimg = FALSE,
+  opts = NULL)
 }
 \arguments{
 \item{source}{Filename (or nifti) to match to target}
@@ -16,6 +17,8 @@ dramms(source, target, outfile = NULL, outdef = NULL, retimg = FALSE)
 \item{outdef}{output deformation field}
 
 \item{retimg}{return nifti object versus output image}
+
+\item{opts}{Extra arguments to pass to \code{dramms}}
 }
 \value{
 If \code{retimg = TRUE}, a \code{nifti} object.

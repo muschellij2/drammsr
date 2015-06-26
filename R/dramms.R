@@ -7,6 +7,7 @@
 #' @param outfile Output filename
 #' @param outdef output deformation field
 #' @param retimg return nifti object versus output image
+#' @param opts Extra arguments to pass to \code{dramms}
 #' @import fslr 
 #' @import oro.nifti
 #' @export
@@ -25,7 +26,8 @@ dramms <- function(
   target, # Filename (or nifti) to match source to to target
   outfile = NULL, # Output filename
   outdef = NULL, # output deformation field
-  retimg = FALSE # return nifti object versus output image
+  retimg = FALSE, # return nifti object versus output image
+  opts = NULL
   ){
   source = checkimg(source)
   target = checkimg(target)
@@ -34,7 +36,8 @@ dramms <- function(
   args = c("--source"=source, 
            "--target"=target,
            "--outimg"=outfile,
-           "--outdef"=outdef)
+           "--outdef"=outdef,
+           opts)
   cmd = "dramms"
   cmd = dramms_cmd_maker(cmd=cmd, args = args)
 

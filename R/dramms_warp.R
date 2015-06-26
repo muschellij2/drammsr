@@ -6,6 +6,7 @@
 #' @param def input deformation field
 #' @param outfile Output filename
 #' @param interpolation Trilinear or nearest-neighbor interpolation for warping
+#' @param template Template used for argument -t if an affine transformed required
 #' @param retimg return nifti object versus output image
 #' @import fslr 
 #' @import oro.nifti
@@ -19,6 +20,7 @@ dramms_warp <- function(
   def = NULL, # output deformation field
   outfile = NULL, # Output filename
   interpolation = c("trilinear", "nearest.neighbor"),
+  template = NULL,
   retimg = FALSE # return nifti object versus output image
 ){
   source = checkimg(source)
@@ -30,7 +32,8 @@ dramms_warp <- function(
   args = c(source, 
            def,
            outfile,
-           interpolation)
+           interpolation,
+           t = template)
   names(args) = NULL
   cmd = "dramms-warp"
   cmd = dramms_cmd_maker(cmd=cmd, args = args)

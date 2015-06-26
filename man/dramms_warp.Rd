@@ -5,7 +5,8 @@
 \title{Run DRAMMS Warping}
 \usage{
 dramms_warp(source, def = NULL, outfile = NULL,
-  interpolation = c("trilinear", "nearest.neighbor"), retimg = FALSE)
+  interpolation = c("trilinear", "nearest.neighbor"), template = NULL,
+  retimg = FALSE)
 }
 \arguments{
 \item{source}{Filename (or nifti) to match to target}
@@ -15,6 +16,8 @@ dramms_warp(source, def = NULL, outfile = NULL,
 \item{outfile}{Output filename}
 
 \item{interpolation}{Trilinear or nearest-neighbor interpolation for warping}
+
+\item{template}{Template used for argument -t if an affine transformed required}
 
 \item{retimg}{return nifti object versus output image}
 }
