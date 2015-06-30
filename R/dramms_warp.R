@@ -30,7 +30,9 @@ dramms_warp <- function(
   interpolation = ifelse(interpolation == "nearest.neighbor", "-n", "")
   
   outfile = check_outfile(outfile = outfile, retimg = retimg, fileext = ".nii.gz")
-  template = checkimg(template)
+  if (!is.null(template)){
+    template = checkimg(template)
+  }
   
   args = c(interpolation, source, 
            def,
