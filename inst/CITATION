@@ -1,0 +1,14 @@
+bibcit = structure(list(ou2011dramms = structure(list(title = "DRAMMS: Deformable registration via attribute matching and mutual-saliency weighting", 
+    author = structure(list(structure(list(given = "Yangming", 
+        family = "Ou", role = NULL, email = NULL, comment = NULL), .Names = c("given", 
+    "family", "role", "email", "comment")), structure(list(given = "Aristeidis", 
+        family = "Sotiras", role = NULL, email = NULL, comment = NULL), .Names = c("given", 
+    "family", "role", "email", "comment")), structure(list(given = "Nikos", 
+        family = "Paragios", role = NULL, email = NULL, comment = NULL), .Names = c("given", 
+    "family", "role", "email", "comment")), structure(list(given = "Christos", 
+        family = "Davatzikos", role = NULL, email = NULL, comment = NULL), .Names = c("given", 
+    "family", "role", "email", "comment"))), class = "person"), 
+    journal = "Medical image analysis", volume = "15", number = "4", 
+    pages = "622--639", year = "2011", publisher = "Elsevier"), .Names = c("title", 
+"author", "journal", "volume", "number", "pages", "year", "publisher"
+), bibtype = "Article", key = "ou2011dramms")), class = "bibentry", strings = structure(character(0), .Names = character(0)), .Names = "ou2011dramms")

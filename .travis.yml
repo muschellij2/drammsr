@@ -1,4 +1,3 @@
-
 # Sample .travis.yml for R projects
 
 language: r
@@ -8,6 +7,11 @@ sudo: required
 env:
  global:
    - CRAN: http://cran.rstudio.com
+
+addons:
+  apt:
+    packages:
+    - cmake
 
 notifications:
   email:

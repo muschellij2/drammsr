@@ -6,9 +6,11 @@ Version: 1.0.3
 Date: 2016-01-06
 Author: John Muschelli
 Maintainer: John Muschelli <muschellij2@gmail.com>
-Description: It performs registration with weighting of saliency features.
-    Located at https://www.cbica.upenn.edu/sbia/software/dramms/
-License: BSD
+Description: DRAMMS performs registration with weighting of saliency features.
+    Source data is located at https://www.cbica.upenn.edu/sbia/software/dramms/.
+    Copyright is from the University of Pennsylvania, 
+    Section of Biomedical Image Analysis (SBIA).
+License: BSD_3_clause + file LICENSE
 Imports:
     fslr,
     oro.nifti
