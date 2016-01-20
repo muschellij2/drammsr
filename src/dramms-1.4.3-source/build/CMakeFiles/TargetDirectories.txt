@@ -1,2 +1,0 @@
-/Users/johnmuschelli/Dropbox/Packages/drammsr/src/dramms-1.4.3-source/build/CMakeFiles/BASIS.dir
-/Users/johnmuschelli/Dropbox/Packages/drammsr/src/dramms-1.4.3-source/build/CMakeFiles/bundle.dir

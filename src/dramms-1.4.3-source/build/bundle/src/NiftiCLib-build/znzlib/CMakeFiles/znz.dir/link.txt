@@ -1,2 +1,0 @@
-/usr/bin/ar cr libznz.a  CMakeFiles/znz.dir/znzlib.o
-/usr/bin/ranlib libznz.a

@@ -1,2 +1,0 @@
-/usr/bin/ar cr libnifticdf.a  CMakeFiles/nifticdf.dir/nifticdf.o
-/usr/bin/ranlib libnifticdf.a

@@ -1,3 +1,0 @@
-/Users/johnmuschelli/Dropbox/Packages/drammsr/src/dramms-1.4.3-source/build/bundle/CMakeFiles/DRAMMS.dir
-/Users/johnmuschelli/Dropbox/Packages/drammsr/src/dramms-1.4.3-source/build/bundle/CMakeFiles/FastPD.dir
-/Users/johnmuschelli/Dropbox/Packages/drammsr/src/dramms-1.4.3-source/build/bundle/CMakeFiles/NiftiCLib.dir
