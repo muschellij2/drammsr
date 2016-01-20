@@ -2,8 +2,8 @@ Package: drammsr
 Type: Package
 Title: Installs DRAMMS (Deformable Registration via Attribute Matching and
     Mutual-Saliency Weighting) for Image Registration
-Version: 1.0.3
-Date: 2016-01-06
+Version: 1.0.4
+Date: 2016-01-16
 Author: John Muschelli
 Maintainer: John Muschelli <muschellij2@gmail.com>
 Description: DRAMMS performs registration with weighting of saliency features.
@@ -14,5 +14,7 @@ License: BSD_3_clause + file LICENSE
 Imports:
     fslr,
     oro.nifti
-SystemRequirements: cmake (http://www.cmake.org)
+SystemRequirements: 
+  cmake (http://www.cmake.org),
+  FSL (http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation)
 RoxygenNote: 5.0.1
