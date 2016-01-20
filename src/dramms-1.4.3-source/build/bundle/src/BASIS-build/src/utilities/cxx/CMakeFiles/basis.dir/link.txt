@@ -1,0 +1,2 @@
+/usr/bin/ar cr ../../../lib/libbasis.a  CMakeFiles/basis.dir/__/__/basis.cxx.o
+/usr/bin/ranlib ../../../lib/libbasis.a

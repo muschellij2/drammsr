@@ -1,0 +1,1 @@
+/usr/bin/c++   -Wall -mtune=core2 -g -O2   -O3 -DNDEBUG -Wl,-search_paths_first -Wl,-headerpad_max_install_names   CMakeFiles/testdriver.dir/testdriver.cxx.o  -o ../../lib/testdriver  ../../lib/libutilities.a ../../lib/libbasis.a ../../lib/libutilities.a 

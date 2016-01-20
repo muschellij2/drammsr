@@ -1,0 +1,3 @@
+repository='external project URL'
+module='/Users/johnmuschelli/Dropbox/Packages/drammsr/src/dramms-1.4.3-source/build/FastPD_DemoVersion.zip'
+tag='e8b7aa455bad254fe16434f1c601b66e'

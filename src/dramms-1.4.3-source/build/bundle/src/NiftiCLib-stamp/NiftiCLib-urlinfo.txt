@@ -1,0 +1,3 @@
+repository='external project URL'
+module='/Users/johnmuschelli/Dropbox/Packages/drammsr/src/dramms-1.4.3-source/build/nifticlib-2.0.0.tar.gz'
+tag='ad9d7dd1ca7c10bf0592a8227c452354'
