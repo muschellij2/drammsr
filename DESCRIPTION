@@ -2,8 +2,8 @@ Package: drammsr
 Type: Package
 Title: Installs DRAMMS (Deformable Registration via Attribute Matching and
     Mutual-Saliency Weighting) for Image Registration
-Version: 1.0.4
-Date: 2016-01-16
+Version: 1.0.5
+Date: 2016-02-10
 Author: John Muschelli
 Maintainer: John Muschelli <muschellij2@gmail.com>
 Description: DRAMMS performs registration with weighting of saliency features.
