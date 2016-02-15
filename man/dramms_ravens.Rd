@@ -4,12 +4,16 @@
 \alias{dramms_ravens}
 \title{Run DRAMMS RAVENS Map}
 \usage{
-dramms_ravens(label, template, def, prefix, scale_factor = NULL,
-  verbose = TRUE)
+dramms_ravens(label, labs = NULL, template, def, prefix,
+  scale_factor = NULL, verbose = TRUE)
 }
 \arguments{
 \item{label}{label image in subject space. 
 Note that the label image must be in uint8 (aka byte, or uchar) datatype.}
+
+\item{labs}{vector of values of the labels in an image.  If not 
+specified, will use all labels from \code{label} image that are positive
+and non-zero.  Will fail if more than 5.}
 
 \item{template}{template image, where RAVENS map will reside.}
 
