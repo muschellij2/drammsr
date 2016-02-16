@@ -5,8 +5,8 @@
 \title{Run DRAMMS with RAVENS option}
 \usage{
 dramms_with_ravens(source, target, outfile = NULL, outdef = NULL,
-  retimg = FALSE, opts = NULL, label = NULL, labs = NULL,
-  ravens_prefix = NULL, verbose = TRUE)
+  retimg = FALSE, opts = NULL, label, labs = NULL, ravens_prefix = NULL,
+  verbose = TRUE)
 }
 \arguments{
 \item{source}{Filename (or nifti) to match to target}
@@ -15,7 +15,7 @@ dramms_with_ravens(source, target, outfile = NULL, outdef = NULL,
 
 \item{outfile}{Output filename}
 
-\item{outdef}{output deformation field}
+\item{outdef}{output deformation field (it will be in template to subject space)}
 
 \item{retimg}{return nifti object versus output image}
 
@@ -33,8 +33,10 @@ and non-zero.  Will fail if more than 5.}
 \item{verbose}{(logical) print out command before running}
 }
 \value{
-If \code{retimg = TRUE}, a \code{nifti} object.  
-If \code{retimg = FALSE}, a the filename of the output image.
+If \code{retimg = TRUE}, a list of \code{nifti} objects consisting
+of the RAVENS images, the output file (template to subject space), and 
+output deformation field (template to subject space).
+If \code{retimg = FALSE}, a list of the filenames of the output image.
 }
 \description{
 Runs DRAMMS on source and target
