@@ -114,7 +114,7 @@ dramms_with_ravens <- function(
   if (res != 0) {
     stop("DRAMMS command failed")
   }
-  ravens = paste0(ravens_prefix, labs, ".nii.gz")
+  ravens = paste0(ravens_prefix, "_", labs, ".nii.gz")
   if (retimg) {
     ravens = check_nifti(ravens)
     outfile = check_nifti(outfile)
