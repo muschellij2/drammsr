@@ -1,0 +1,142 @@
+#! /bin/bash
+
+##############################################################################
+# @file  test_executable_target_info.sh
+# @brief Test executable target related functions of BASIS utilities.
+#
+# Copyright (c) 2011, 2012 University of Pennsylvania. All rights reserved.<br />
+# See http://www.rad.upenn.edu/sbia/software/license.html or COPYING file.
+#
+# Contact: SBIA Group <sbia-software at uphs.upenn.edu>
+##############################################################################
+
+. "${BASIS_BASH_UTILITIES}" || { echo "Failed to load BASIS utilities!" 1>&2; exit 1; }
+
+import basis.shtap
+
+# ============================================================================
+# plan
+# ============================================================================
+
+plan_tests 41
+
+# ============================================================================
+# tests
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# test _executabletargetinfo_sanitize()
+#
+# This function failed before due to the GNU version of tr using -c instead of -C.
+
+_basis_executabletargetinfo_sanitize sane 'basis::basisproject'
+is "${sane}" 'basis__basisproject' ':: replaced by _'
+_basis_executabletargetinfo_sanitize sane 'basis.basisproject'
+is "${sane}" 'basis_basisproject' '. replaced by _'
+_basis_executabletargetinfo_sanitize sane 'basis@basisproject'
+is "${sane}" 'basis_basisproject' '@ replaced by _'
+
+# ----------------------------------------------------------------------------
+# test targetuid()
+
+# without namespace
+targetuid uid 'basisproject'
+is $? 0 'return value is 0'
+is "${uid}" 'basisproject' 'target of other project unmodified'
+targetuid uid 'unknown'
+is $? 0 'return value is 0'
+is "${uid}" 'unknown' 'unknown target unmodified'
+
+# with namespace
+targetuid uid 'basis.basisproject'
+is $? 0 'return value is 0'
+is "${uid}" 'basis.basisproject' 'UID remains unchanged'
+targetuid uid 'hammer.hammer'
+is $? 0 'return value is 0'
+is "${uid}" 'hammer.hammer' 'UID remains unchanged'
+
+# global namespace
+targetuid uid '.hello'
+is $? 0 'return value is 0'
+is "${uid}" '.hello' 'global namespace remains unchanged'
+
+# empty string
+targetuid uid ''
+is $? 0 'return value is 0'
+is "${uid}" '' 'empty string remains unchanged'
+
+# ----------------------------------------------------------------------------
+# test istarget()
+
+istarget 'basisproject'
+isnt $? 0 'basisproject not part of UtilitiesTest'
+istarget 'basis.basisproject'
+is $? 0 'basis.basisproject is known target'
+istarget ''
+isnt $? 0 'empty target string is unknown target'
+istarget
+isnt $? 0 'undefined target string is unknown target'
+istarget 'hammer.hammer'
+isnt $? 0 'some unknown target'
+
+# ----------------------------------------------------------------------------
+# test exename()
+
+# name of this executable
+exename name
+is $? 0 'return value is 0'
+is "${name}" 'test_executabletargetinfo_sh' 'name of this executable'
+
+# name of executable built by other target
+exename name 'basis.basisproject'
+is $? 0 'return value is 0'
+like "${name}" 'basisproject' 'name of other executable'
+
+# ----------------------------------------------------------------------------
+# test exedir()
+
+# directory of this executable
+exedir dir
+is $? 0 'return value is 0'
+like "${dir}" '/Testing/Temporary/test_utilities/build/Testing/bin' 'directory of this executable'
+
+# directory of executable built by other target
+exedir dir 'basis.basisproject'
+is $? 0 'return value is 0'
+like "${dir}" '^/.*/bin(/basis)?$' 'directory of other executable'
+
+# ----------------------------------------------------------------------------
+# test exepath()
+
+# path of this executable
+exepath path
+is $? 0 'return value is 0'
+exedir dir
+is $? 0 'return value is 0'
+exename name
+is $? 0 'return value is 0'
+is "${path}" "${dir}/${name}" 'path of this executable'
+
+# path of executable built by other target
+target='basis.basisproject'
+exepath path "${target}"
+is $? 0 'return value is 0'
+exedir dir "${target}"
+is $? 0 'return value is 0'
+exename name "${target}"
+is $? 0 'return value is 0'
+is "${path}" "${dir}/${name}" "path of ${target}"
+
+# path of some system command
+exepath path 'ls'
+is $? 0 'return value is 0'
+is "${path}" '/bin/ls' 'absolute path of ls command'
+
+# path of non-existend system command
+exepath path 'some-certainly-non-existing-command'
+isnt $? 0 'return value is not 0'
+is "${path}" '' 'empty path returned for non-existend command'
+
+# wrong number of arguments
+exepath
+isnt $? 0 'return value is not 0'

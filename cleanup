@@ -1,0 +1,4 @@
+#!/bin/sh
+############### still a WIP ###############
+rm -f -r inst/dramms/*
+rm -r src/dramms-1.4.3-source/*

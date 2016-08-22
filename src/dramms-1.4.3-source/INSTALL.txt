@@ -1,0 +1,26 @@
+
+  Section of Biomedical Image Analysis
+  Department of Radiology
+  University of Pennsylvania
+  3600 Market Street, Suite 380
+  Philadelphia, PA 19104
+
+  Web:   https://www.cbica.upenn.edu/sbia/
+  Email: sbia-software at uphs.upenn.edu
+
+  Copyright (c) 2011--2014 University of Pennsylvania. All rights reserved.
+  See http://www.cbica.upenn.edu/sbia/software/license.html or COPYING file.
+
+
+
+INSTALLATION
+============
+
+  The DRAMMS software has been installed in multiple research labs worldwide. It usually takes 5-10 minutes to install. 
+  Please strictly follow the steps on the following webpage to install:
+
+
+  http://www.cbica.upenn.edu/sbia/software/dramms/installation.html
+
+
+

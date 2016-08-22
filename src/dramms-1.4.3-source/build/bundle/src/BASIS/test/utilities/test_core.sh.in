@@ -1,0 +1,52 @@
+#! /bin/bash
+
+##############################################################################
+# @file  test_core.sh
+# @brief Test core.sh module.
+#
+# Copyright (c) 2011, 2012 University of Pennsylvania. All rights reserved.<br />
+# See http://www.rad.upenn.edu/sbia/software/license.html or COPYING file.
+#
+# Contact: SBIA Group <sbia-software at uphs.upenn.edu>
+##############################################################################
+
+. "${BASIS_BASH_UTILITIES}" || exit 1
+
+import basis.shtap
+
+echo -n "<DartMeasurement name=\"Host Name\" type=\"string\">"
+echo -n `hostname`;
+echo    "</DartMeasurement>";
+
+# ============================================================================
+# plan
+# ============================================================================
+
+plan_tests 10
+
+# ============================================================================
+# tests
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# match()
+match
+isnt $? 0 'match() without arguments returns non-zero value'
+match 'a'
+isnt $? 0 'match() with too few arguments returns non-zero value'
+match 'a' 'b' 'c'
+isnt $? 0 'match() with too many arguments returns non-zero value'
+match '' ''
+is $? 0 'two empty strings match'
+match 'a' 'b'
+isnt $? 0 "'a' and 'b' do not match"
+match 'hall' '^(ha|ba)ll$'
+is $? 0 'more complex pattern with groups and alternatives'
+match 'hall0' '^(ha|ba)ll$'
+isnt $? 0 'more complex pattern with groups and alternatives'
+match 'ball' '^(ha|ba)ll$'
+is $? 0 'more complex pattern with groups and alternatives'
+match 'ballroom' '^(ha|ba)ll$'
+isnt $? 0 'more complex pattern with groups and alternatives'
+match 'ballroom' '^(ha|ba)ll'
+is $? 0 'more complex pattern with groups and alternatives'
