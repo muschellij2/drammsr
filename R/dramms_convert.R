@@ -15,8 +15,6 @@
 #' vectors, or x/y/z displacements
 #' @param change_3 Change deformation field vectors to three-dimensional
 #' displacements
-#' @import fslr 
-#' @import oro.nifti
 #' @export
 #' @return If \code{retimg = TRUE}, a \code{nifti} object.  
 #' If \code{retimg = FALSE}, a the filename of the output image.

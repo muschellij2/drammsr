@@ -11,10 +11,10 @@
 #' @param prefix prefix for all RAVENS maps.
 #' @param scale_factor scale factor (default: 1000)
 #' @param verbose (logical) print out command before running
-#' @import fslr 
-#' @import oro.nifti
+#' 
 #' @export
 #' @return Result of \code{\link{system}} command
+#' @importFrom oro.nifti convert.datatype datatype
 dramms_ravens <- function(
   label, # Filename (or nifti) to apply deformation field
   labs = NULL,

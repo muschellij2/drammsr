@@ -7,8 +7,7 @@
 #' @param operation Operation to perform: multiply, divide, square, or sqrt
 #' @param retimg return nifti object versus output image
 #' @param outfile Output filename 
-#' @import oro.nifti
-#' @import fslr
+#' 
 #' @export
 #' @return If \code{retimg = TRUE}, a \code{nifti} object.  
 #' If \code{retimg = FALSE}, a the filename of the output image.

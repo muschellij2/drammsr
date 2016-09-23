@@ -12,8 +12,6 @@
 #' @param xy_switch_off turn x-y switch off 
 #' (default: on for default input deformation in DRAMMS format)
 #' @param log_jacobian take log of jacobian determinant
-#' @import fslr 
-#' @import oro.nifti
 #' @export
 #' @return If \code{retimg = TRUE}, a \code{nifti} object.  
 #' If \code{retimg = FALSE}, a the filename of the output image.

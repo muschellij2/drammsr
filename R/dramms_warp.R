@@ -9,8 +9,7 @@
 #' @param template Template used for argument -t if an affine transformed required
 #' @param retimg return nifti object versus output image
 #' @param verbose (logical) print out command before running
-#' @import fslr 
-#' @import oro.nifti
+#' 
 #' @export
 #' @return If \code{retimg = TRUE}, a \code{nifti} object.  
 #' If \code{retimg = FALSE}, a the filename of the output image.

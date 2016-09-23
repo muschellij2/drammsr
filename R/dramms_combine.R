@@ -7,8 +7,7 @@
 #' @param outfile output deformation field fielname
 #' @param retimg return nifti object versus output image
 #' @param operation Way to combine the deformations
-#' @import fslr 
-#' @import oro.nifti
+#' 
 #' @export
 #' @return If \code{retimg = TRUE}, a \code{nifti} object.  
 #' If \code{retimg = FALSE}, a the filename of the output image.

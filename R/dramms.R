@@ -9,8 +9,10 @@
 #' @param retimg return nifti object versus output image
 #' @param opts Extra arguments to pass to \code{dramms}
 #' @param verbose (logical) print out command before running 
-#' @import fslr 
-#' @import oro.nifti
+#' @importFrom neurobase checkimg check_outfile
+#' @importFrom oro.nifti readNIfTI
+#' @importFrom fslr flirt
+#' 
 #' @export
 #' @return If \code{retimg = TRUE}, a \code{nifti} object.  
 #' If \code{retimg = FALSE}, a the filename of the output image.

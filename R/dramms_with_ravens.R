@@ -15,8 +15,7 @@
 #' and non-zero.  Will fail if more than 5.
 #' @param ravens_prefix prefix for all RAVENS maps. 
 #' @param verbose (logical) print out command before running 
-#' @import fslr 
-#' @import oro.nifti
+#' 
 #' @export
 #' @return If \code{retimg = TRUE}, a list of \code{nifti} objects consisting
 #' of the RAVENS images, the output file (template to subject space), and 

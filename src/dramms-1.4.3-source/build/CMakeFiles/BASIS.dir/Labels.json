@@ -1,0 +1,51 @@
+
+{
+	"sources" : 
+	[
+		
+		{
+			"file" : "/Users/johnmuschelli/Dropbox/Packages/drammsr/src/dramms-1.4.3-source/build/CMakeFiles/BASIS"
+		},
+		
+		{
+			"file" : "/Users/johnmuschelli/Dropbox/Packages/drammsr/src/dramms-1.4.3-source/build/CMakeFiles/BASIS.rule"
+		},
+		
+		{
+			"file" : "/Users/johnmuschelli/Dropbox/Packages/drammsr/src/dramms-1.4.3-source/build/CMakeFiles/BASIS-complete.rule"
+		},
+		
+		{
+			"file" : "/Users/johnmuschelli/Dropbox/Packages/drammsr/src/dramms-1.4.3-source/build/bundle/src/BASIS-stamp/BASIS-install.rule"
+		},
+		
+		{
+			"file" : "/Users/johnmuschelli/Dropbox/Packages/drammsr/src/dramms-1.4.3-source/build/bundle/src/BASIS-stamp/BASIS-mkdir.rule"
+		},
+		
+		{
+			"file" : "/Users/johnmuschelli/Dropbox/Packages/drammsr/src/dramms-1.4.3-source/build/bundle/src/BASIS-stamp/BASIS-download.rule"
+		},
+		
+		{
+			"file" : "/Users/johnmuschelli/Dropbox/Packages/drammsr/src/dramms-1.4.3-source/build/bundle/src/BASIS-stamp/BASIS-update.rule"
+		},
+		
+		{
+			"file" : "/Users/johnmuschelli/Dropbox/Packages/drammsr/src/dramms-1.4.3-source/build/bundle/src/BASIS-stamp/BASIS-patch.rule"
+		},
+		
+		{
+			"file" : "/Users/johnmuschelli/Dropbox/Packages/drammsr/src/dramms-1.4.3-source/build/bundle/src/BASIS-stamp/BASIS-configure.rule"
+		},
+		
+		{
+			"file" : "/Users/johnmuschelli/Dropbox/Packages/drammsr/src/dramms-1.4.3-source/build/bundle/src/BASIS-stamp/BASIS-build.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : [ "BASIS" ],
+		"name" : "BASIS"
+	}
+}
