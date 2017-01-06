@@ -1,0 +1,291 @@
+##############################################################################
+# @file  basis.py
+# @brief BASIS utilities of @PROJECT_NAME@ package.
+#
+# @note The basis.py module was automatically created by BASIS from the
+#       template file basis.py.in which is part of the BASIS installation.
+#
+# This module defines BASIS Utilities for Python for the @PROJECT_NAME@ package,
+# i.e., some functions such as print_version() are customized and hence particular
+# to this software package.
+#
+# Only this module should be imported in scripts and modules of the
+# @PROJECT_NAME@ package. For use of these utility functions outside a
+# particular BASIS-based project, use the project-independent utilities
+# defined by the sbia.basis.utilities module instead.
+#
+# Copyright (c) 2011, 2012, 2013 University of Pennsylvania. All rights reserved.<br />
+# See http://www.rad.upenn.edu/sbia/software/license.html or COPYING file.
+#
+# Contact: SBIA Group <sbia-software at uphs.upenn.edu>
+#
+# @ingroup BasisPythonUtilities
+##############################################################################
+
+import os
+import sys
+
+
+__all__ = [] # use of import * is discouraged
+
+# The statement "from basis import utilities" (or "import basis.utilities")
+# cannot be used here with Python 2.x because the name of this module is
+# the same as the name of the basis package. Therefore, load the source
+# file of the basis.utilities module explicitly here.
+#
+# Note: imp.load_source() would be quite more compact. However, the following
+#       will also still work with Python 3.1 and 3.2. For Python 3.3 a
+#       different implementation might be necessary using loader objects.
+import imp
+# path to BASIS Utilities modules
+_path = os.getenv('BASIS_PYTHONPATH')
+if _path is None:
+    for _syspath in sys.path:
+        if (os.path.isfile(os.path.join(_syspath, 'basis/utilities.py' )) or
+            os.path.isfile(os.path.join(_syspath, 'basis/utilities.pyc'))):
+            _path = _syspath
+            break
+if _path is None:
+    _path = '@_BASIS_PYTHONPATH@'
+    if not os.path.isabs(_path):
+        _path = os.path.realpath(os.path.join(os.path.dirname(__file__), _path))
+if (not os.path.isfile(os.path.join(_path, 'basis/utilities.py' )) and
+    not os.path.isfile(os.path.join(_path, 'basis/utilities.pyc'))):
+    raise "Module basis.utilities not found at " + _path + "!\nSpecify path using the PYTHONPATH or BASIS_PYTHONPATH environment variable."
+# basis/__init__.py must be loaded first
+(_file, _filepath, _desc) = imp.find_module('basis', [_path])
+try:
+    basis = imp.load_module('basis', _file, _filepath, _desc)
+finally:
+    if _file: _file.close()
+# then we can load basis.utilities
+(_file, _filepath, _desc) = imp.find_module('utilities', [os.path.join(_path, 'basis')])
+try:
+    utilities = imp.load_module('basis.utilities', _file, _filepath, _desc)
+finally:
+    if _file: _file.close()
+# clean up scope
+del _path
+del _syspath
+del _file
+del _filepath
+del _desc
+del imp
+
+
+## @addtogroup BasisPythonUtilities
+# @{
+
+
+# ============================================================================
+# constants
+# ============================================================================
+
+## @brief Project name.
+PROJECT = '@PROJECT_ID@'
+## @brief Project version.
+VERSION = '@PROJECT_VERSION@'
+## @brief Project version string used by print_version().
+RELEASE = '@PROJECT_RELEASE@'
+## @brief Default copyright of executables.
+COPYRIGHT = "@PROJECT_COPYRIGHT@"
+## @brief Default license of executables.
+LICENSE = "@PROJECT_LICENSE@"
+## @brief Default contact to use for help output of executables.
+CONTACT = "@PROJECT_CONTACT@"
+
+# prefix used to convert target names into target UIDs
+_TARGET_UID_PREFIX = '@PROJECT_NAMESPACE_CMAKE@'
+# paths of executables build by the targets of this project relative to this module
+_EXECUTABLE_TARGETS = {
+    @EXECUTABLE_TARGET_INFO@
+}
+# used to make paths relative to this module absolute
+_TARGETS_BASE = os.path.dirname(os.path.realpath(__file__))
+
+# ============================================================================
+# executable information
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+## @brief Print contact information.
+#
+# @param [in] contact Name of contact.
+def print_contact(contact=CONTACT):
+    utilities.print_contact(contact)
+
+# ----------------------------------------------------------------------------
+## @brief Print version information including copyright and license notices.
+#
+# @param [in] name      Name of executable. Should not be set programmatically
+#                       to the first argument of the @c __main__ module, but
+#                       a string literal instead.
+# @param [in] version   Version of executable, e.g., release of project
+#                       this executable belongs to.
+# @param [in] project   Name of project this executable belongs to.
+#                       If @c None or an empty string, no project information
+#                       is printed.
+# @param [in] copyright The copyright notice, excluding the common prefix
+#                       "Copyright (c) " and suffix ". All rights reserved.".
+#                       If @c None or an empty string, no copyright notice
+#                       is printed.
+# @param [in] license   Information regarding licensing. If @c None or an empty
+#                        string, no license information is printed.
+def print_version(name,
+                  version=RELEASE,
+                  project=PROJECT,
+                  copyright=COPYRIGHT,
+                  license=LICENSE):
+    utilities.print_version(name, version, project=project, copyright=copyright, license=license)
+
+# ----------------------------------------------------------------------------
+## @brief Get UID of build target.
+#
+# The UID of a build target is its name prepended by a namespace identifier
+# which should be unique for each project.
+#
+# @param [in] name    Name of build target.
+# @param [in] prefix  Common prefix of targets belonging to this project.
+# @param [in] targets Dictionary mapping target UIDs to executable paths.
+#
+# @returns UID of named build target.
+def targetuid(name, prefix=_TARGET_UID_PREFIX, targets=_EXECUTABLE_TARGETS):
+    return utilities.targetuid(name, prefix=prefix, targets=targets)
+
+# ----------------------------------------------------------------------------
+## @brief Determine whether a given build target is known.
+#
+# @param [in] name    Name of build target.
+# @param [in] prefix  Common prefix of targets belonging to this project.
+# @param [in] targets Dictionary mapping target UIDs to executable paths.
+#
+# @returns Whether the named target is a known executable target.
+def istarget(name, prefix=_TARGET_UID_PREFIX, targets=_EXECUTABLE_TARGETS):
+    return utilities.istarget(name, prefix=prefix, targets=targets)
+
+# ----------------------------------------------------------------------------
+## @brief Get absolute path of executable file.
+#
+# This function determines the absolute file path of an executable. If no
+# arguments are given, the absolute path of this executable is returned.
+# If the command names a known executable build target, the absolute path to
+# the corresonding built (and installed) executable file is returned.
+# Otherwise, the named command is searched in the system @c PATH and its
+# absolute path returned if found. If the executable is not found, @c None
+# is returned.
+#
+# @param [in] name    Name of command or @c None.
+# @param [in] prefix  Common prefix of targets belonging to this project.
+# @param [in] targets Dictionary mapping target UIDs to executable paths.
+# @param [in] base    Base directory for relative paths in @p targets.
+#
+# @returns Absolute path of executable or @c None if not found.
+#          If @p name is @c None, the path of this executable is returned.
+def exepath(name=None, prefix=_TARGET_UID_PREFIX, targets=_EXECUTABLE_TARGETS, base=_TARGETS_BASE):
+    return utilities.exepath(name, prefix=prefix, targets=targets, base=base)
+
+# ----------------------------------------------------------------------------
+## @brief Get name of executable file.
+#
+# @param [in] name    Name of command or @c None.
+# @param [in] prefix  Common prefix of targets belonging to this project.
+# @param [in] targets Dictionary mapping target UIDs to executable paths.
+# @param [in] base    Base directory for relative paths in @p targets.
+#
+# @returns Name of executable file or @c None if not found.
+#          If @p name is @c None, the name of this executable is returned.
+def exename(name=None, prefix=_TARGET_UID_PREFIX, targets=_EXECUTABLE_TARGETS, base=_TARGETS_BASE):
+    return utilities.exename(name, prefix=prefix, targets=targets, base=base)
+
+# ----------------------------------------------------------------------------
+## @brief Get directory of executable file.
+#
+# @param [in] name    Name of command or @c None.
+# @param [in] prefix  Common prefix of targets belonging to this project.
+# @param [in] targets Dictionary mapping target UIDs to executable paths.
+# @param [in] base    Base directory for relative paths in @p targets.
+#
+# @returns Absolute path of directory containing executable or @c None if not found.
+#         If @p name is @c None, the directory of this executable is returned.
+def exedir(name=None, prefix=_TARGET_UID_PREFIX, targets=_EXECUTABLE_TARGETS, base=_TARGETS_BASE):
+    return utilities.exedir(name, prefix=prefix, targets=targets, base=base)
+
+# ============================================================================
+# command execution
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+## @brief Exception thrown when command execution failed.
+#
+# @sa sbia.basis.utilities.SubprocessError
+SubprocessError = utilities.SubprocessError
+
+# ----------------------------------------------------------------------------
+## @brief Convert array of arguments to quoted string.
+#
+# @param [in] args Array of arguments.
+#
+# @returns Double quoted string, i.e., string where arguments are separated
+#          by a space character and surrounded by double quotes if necessary.
+#          Double quotes within an argument are escaped with a backslash.
+#
+# @sa qsplit()
+tostring = utilities.tostring
+
+# ----------------------------------------------------------------------------
+## @brief Split quoted string of arguments.
+#
+# @param [in] args Quoted string of arguments.
+#
+# @returns Array of arguments.
+#
+# @sa tostring()
+qsplit = utilities.qsplit
+
+# ----------------------------------------------------------------------------
+## @brief Execute command as subprocess.
+#
+# @param [in] args       Command with arguments given either as quoted string
+#                        or array of command name and arguments. In the latter
+#                        case, the array elements are converted to strings
+#                        using the built-in str() function. Hence, any type
+#                        which can be converted to a string is permitted.
+#                        The first argument must be the name or path of the
+#                        executable of the command.
+# @param [in] quiet      Turns off output of @c stdout of child process to
+#                        stdout of parent process.
+# @param [in] stdout     Whether to return the command output.
+# @param [in] allow_fail If true, does not raise an exception if return
+#                        value is non-zero. Otherwise, a @c SubprocessError is
+#                        raised by this function.
+# @param [in] verbose    Verbosity of output messages.
+#                        Does not affect verbosity of executed command.
+# @param [in] simulate   Whether to simulate command execution only.
+# @param [in] prefix     Common prefix of build targets belonging to this project.
+# @param [in] targets    Dictionary which maps build target names to
+#                        executable file paths. The code to initialize
+#                        this dictionary is generated by BASIS.
+# @param [in] base       Base directory for relative paths in @p targets.
+#
+# @return The exit code of the subprocess if @p stdout is false (the default).
+#         Otherwise, if @p stdout is true, a tuple consisting of exit code
+#         command output is returned. Note that if @p allow_fail is false,
+#         the returned exit code will always be 0.
+#
+# @throws SubprocessError If command execution failed. This exception is not
+#                         raised if the command executed with non-zero exit
+#                         code but @p allow_fail set to @c True.
+def execute(args, quiet=False, stdout=False, allow_fail=False, verbose=0, simulate=False,
+                  prefix=_TARGET_UID_PREFIX, targets=_EXECUTABLE_TARGETS, base=_TARGETS_BASE):
+    return utilities.execute(args, quiet=quiet,
+                                   stdout=stdout,
+                                   allow_fail=allow_fail,
+                                   verbose=verbose,
+                                   simulate=simulate,
+                                   prefix=prefix,
+                                   targets=targets,
+                                   base=base)
+
+
+## @}
+# end of Doxygen group

@@ -1,0 +1,325 @@
+
+  Section of Biomedical Image Analysis
+  Department of Radiology
+  University of Pennsylvania
+  3600 Market Street, Suite 380
+  Philadelphia, PA 19104
+
+  Web:   http://www.rad.upenn.edu/sbia/
+  Email: sbia-software at uphs.upenn.edu
+
+  Copyright (c) 2011, University of Pennsylvania. All rights reserved.
+  See http://www.rad.upenn.edu/sbia/software/license.html or COPYING file.
+
+
+
+INTRODUCTION
+============
+
+  This document details the requirements on the command-line parsing libraries
+  which are integrated with BASIS. One library for each programming language
+  used in software projects at our lab and hence supported by BASIS.
+  
+  As parsing the command-line arguments is a very common task, several open source
+  solutions for this problem exist already, such as in particular the getopt
+  functions which are, for example in C/C++, part of the GNU C Library [1].
+  The getopt functions are however rather low-level functions and not per se
+  available on Windows. For example, there is no support for the automatic
+  generation of a nicely formatted help output, a major requirement on an
+  option parsing library that shall take off most of the burden for this matter
+  from the developer of a command-line tool. After all, each of the available
+  libraries has its pros and cons. Moreover, a higher-level implementation
+  (which is hence easier to use than getopt) with similar look and feel across
+  programming languages is hard to find. For each programming language, a
+  comparison of the already available libraries is summarized herein. Based
+  on this comparison, either one of these libraries is picked for the
+  integration with BASIS--and hence making it the standard command-line
+  parsing library for this language--or it is decided that none of the
+  available libraries are satisfactory. In the latter case, we would need to
+  implement such library ourselves.
+
+  At first, the requirements we have on a command-line parsing library are
+  stated. Afterwards, for each supported programming language, a summary of
+  available command-line parsing libraries is given. Finally, the named
+  thirdparty libraries are compared to our requirements and to each other where
+  upon we make our decision which command-line parsing library to use. Finally,
+  an short example demonstrating the use of the selected standard library is given.
+
+
+
+REQUIREMENTS
+============
+
+  TODO Revise. These are very much influenced by the Google libraries.
+
+  * Easy to use. For most cases, a single source code line should be sufficient
+    to define a command-line option.
+
+  * Automatic generation of nicely formatted help output from option descriptions.
+
+  * Ability to group/categorize options in help output.
+
+  * Ability to mark options as required, i.e., to specify that these options
+    have to be given at the command-line. Whether an option is required or not
+    may be finally specified by the main module even if the option was defined
+    by a submodule.
+
+  * A short help screen displays only the help of required and so-called key options.
+    Therefore, it is required that certain options can be marked as being key
+    options. Whether an option is key or not, may be finally specified by the
+    main module even if the option was defined by a submodule.
+
+  Minor important requirements:
+
+  * Similar look and feel across programming languages.
+
+  * Support for distributed options definitions, i.e., global options registry.
+
+  * In case of distributed options, use option groups as namespaces for options.
+    An option can be matched either by "--<name>" or "--<group>-<name>". If more than
+    one group defines an option of name <name>, only the latter will be matched.
+    Short option names must be unique in any case.
+
+
+
+PARSING ARGUMENTS IN C++
+========================
+
+  Available Libraries
+  -------------------
+
+  - getopt [1]
+  - Boost.Program_options [2]
+  - popt [3]
+  - Argtable [4]
+  - TCLAP [5]
+  - gflags [6]
+  - GLib [7]
+  - Options [8]
+  - AnyOption [9]
+
+  Comparison
+  ----------
+
+  TODO
+
+  Only Google's open source gflags projects appear to be available with similar
+  use and functionality for at least the currently most popular programming
+  languages. Here command-line options are referred to as flags and unless getopt
+  and most other option parsing libraries, Google's solution to this problem
+  implements a so-called distributed flag-definition policy. Though an interesting
+  approach, this feature is of minor importance for us. On the other side, however,
+  a library that follows this policy can be used in both ways, the traditional one
+  where all options are defined in the main module and the Google way, where
+  options are defined across modules. Hence, it provides more flexibility than
+  libraries that require the options to be defined in the main module only.
+
+
+  The Library Included with BASIS
+  -------------------------------
+
+  The standard library for the parsing of command-line arguments in C++ code is:
+ 
+  => TCLAP (TODO: or gflags?)
+
+  An example implementation using this library is given below:
+
+  TODO
+
+
+
+PARSING ARGUMENTS IN JAVA
+=========================
+
+  Available Libraries
+  -------------------
+
+  - JOpt Simple [10]
+  - JArgs [11]
+  - Commons CLI [12]
+  - args4j [13]
+  - argparser [14]
+  - CLAJR [15]
+  - JSAP [16]
+  - CmdLn [17]
+  - JewelCli [18]
+  - cli-parser [19]
+  - JCommander [20]
+  - jcmdline [21]
+  - JArgp [22]
+
+
+  Comparison
+  ----------
+
+  TODO
+
+
+  The Library Included with BASIS
+  -------------------------------
+
+  The standard library for the parsing of command-line arguments in C++ code is:
+ 
+  => args4j (TODO: or any other?)
+
+  An example implementation using this library is given below:
+
+  TODO
+
+
+
+PARSING ARGUMENTS IN PYTHON
+===========================
+
+  Available Libraries
+  -------------------
+
+  - getopt [23]
+  - optparse [24]
+  - argparse [25]
+  - python-gflags [26]
+
+
+  Comparison
+  ----------
+
+  TODO
+
+
+  The Library Included with BASIS
+  -------------------------------
+
+  The standard library for the parsing of command-line arguments in Python code is:
+ 
+  => argh (TODO: or python-gflags?)
+
+  An example implementation using this library is given below:
+
+  TODO
+
+
+
+PARSING ARGUMENTS IN PERL
+=========================
+
+  Available Libraries
+  -------------------
+
+  - Getopt::Std [27]
+  - Getopt::Long [28]
+  - Getopt::Tabular [29]
+  - Getopt::Declare [30]
+
+
+  Comparison
+  ----------
+
+  TODO
+
+
+  The Library Included with BASIS
+  -------------------------------
+
+  The standard library for the parsing of command-line arguments in Perl code is:
+ 
+  => Getopt::Declare (TODO: or Getopt::Tabular?)
+
+  An example implementation using this library is given below:
+
+  TODO
+
+
+
+PARSING ARGUMENTS IN BASH
+=========================
+
+  Available Libraries
+  -------------------
+
+  - getopts (builtin) [31]
+  - GNU getopt [1]
+  - shFlags (gflags port) [32]
+
+
+  Comparison
+  ----------
+
+  TODO
+
+
+  The Library Included with BASIS
+  -------------------------------
+
+  The standard library for the parsing of command-line arguments in BASH code is:
+ 
+  => shflags (modified and extended shFlags library for BASIS)
+
+  An example implementation using this library is given below:
+
+  TODO
+
+
+
+PARSING ARGUMENTS IN MATLAB
+===========================
+
+  Available Libraries
+  -------------------
+
+  None (TODO: really?!?)
+
+
+  Comparison
+  ----------
+
+  TODO
+
+
+  The Library Included with BASIS
+  -------------------------------
+
+  The standard library for the parsing of command-line arguments in MATLAB code is:
+ 
+  - TODO
+
+  An example implementation using this library is given below:
+
+  TODO
+
+
+
+REFERENCES
+==========
+
+   [1] http://www.gnu.org/s/hello/manual/libc/Getopt.html
+   [2] http://www.boost.org/doc/libs/1_47_0/doc/html/program_options.html
+   [3] http://freshmeat.net/projects/popt
+   [4] http://argtable.sourceforge.net/
+   [5] http://tclap.sourceforge.net/
+   [6] http://code.google.com/p/google-gflags/
+   [7] http://developer.gnome.org/glib/2.28/glib-Commandline-option-parser.html
+   [8] http://www.cmcrossroads.com/bradapp/ftp/src/libs/C++/Options.html
+   [9] http://www.hackorama.com/anyoption/
+  [10] http://pholser.github.com/jopt-simple/
+  [11] http://jargs.sourceforge.net/
+  [12] http://commons.apache.org/cli/
+  [13] https://github.com/kohsuke/args4j/tree/master/args4j
+  [14] http://www.cs.ubc.ca/~lloyd/java/argparser.html
+  [15] http://clajr.sourceforge.net/
+  [16] http://www.martiansoftware.com/jsap/
+  [17] http://ostermiller.org/utils/CmdLn.html
+  [18] http://jewelcli.sourceforge.net/index.html
+  [19] http://code.google.com/p/cli-parser/
+  [20] http://jcommander.org/
+  [21] http://jcmdline.sourceforge.net/
+  [22] http://jargp.sourceforge.net/
+  [23] http://docs.python.org/library/getopt.html
+  [24] http://docs.python.org/library/optparse.html
+  [25] http://docs.python.org/library/argparse.html
+  [26] http://code.google.com/p/python-gflags/
+  [27] http://perldoc.perl.org/Getopt/Std.html
+  [28] http://perldoc.perl.org/Getopt/Long.html
+  [29] http://search.cpan.org/~gward/Getopt-Tabular-0.3/Tabular.pod
+  [30] http://search.cpan.org/~fangly/Getopt-Declare-1.14/lib/Getopt/Declare.pm
+  [31] http://www.manpagez.com/man/1/getopt/
+  [32] http://code.google.com/p/shflags/
