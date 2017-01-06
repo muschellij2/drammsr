@@ -13,3 +13,5 @@
 
 # RStudio files
 .Rproj.user/
+
+src/dramms-1.4.3-source/*

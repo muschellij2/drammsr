@@ -1,1 +1,0 @@
-cmd='/opt/local/bin/cmake;-C/Users/johnmuschelli/Dropbox/Packages/drammsr/src/dramms-1.4.3-source/build/bundle/tmp/BASIS-cache-$<CONFIG>.cmake;-GUnix Makefiles;/Users/johnmuschelli/Dropbox/Packages/drammsr/src/dramms-1.4.3-source/build/bundle/src/BASIS'
