@@ -25,4 +25,3 @@ If \code{retimg = FALSE}, a the filename of the output image.
 \description{
 Combines DRAMMS deformations
 }
-

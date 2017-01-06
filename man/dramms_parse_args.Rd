@@ -15,4 +15,3 @@ character string of arguments
 \description{
 Create argument character for DRAMMS command
 }
-

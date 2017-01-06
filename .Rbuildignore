@@ -4,3 +4,6 @@
 
 src/dramms-build.*.zip$
 README.md
+
+check.sh
+build.sh

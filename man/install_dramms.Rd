@@ -14,4 +14,3 @@ install_dramms(tarfile = NULL, install_dir = "/usr/local/dramms")
 \description{
 Install the source .tar.gz of DRAMMS
 }
-

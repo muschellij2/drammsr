@@ -17,4 +17,3 @@ A character of the result of the system command.
 \description{
 Runs dramms_defop mapping of coordinates
 }
-

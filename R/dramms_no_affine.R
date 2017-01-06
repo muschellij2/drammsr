@@ -2,6 +2,7 @@
 #' @title DRAMMS without Affine
 #'
 #' @description Runs DRAMMS on source and target without Affine transformation
+#' @param ... arguments to pass to \code{\link{dramms}} 
 #' @param opts Extra arguments to pass to \code{dramms}, \code{-a 0} will be added
 #' @return Output from \code{\link{dramms}}
 #' 

@@ -39,4 +39,3 @@ If \code{retimg = FALSE}, a the filename of the output image.
 \description{
 Convert DRAMMS deformation to new output
 }
-

@@ -20,4 +20,3 @@ If \code{retimg = FALSE}, a the filename of the output image.
 \description{
 Runs dramms_defop with inversion on deformation
 }
-

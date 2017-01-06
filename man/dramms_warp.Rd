@@ -34,4 +34,3 @@ Runs DRAMMS Warping on source and target
 As DRAMMS use FLIRT to do affine transformations, please use
 \code{\link{flirt}} to apply transformation of affine .mat file.
 }
-

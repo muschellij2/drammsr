@@ -51,4 +51,3 @@ brain = file.path(fsldir(), "data", "standard", "MNI152_T1_1mm_brain.nii.gz")
 res = dramms(source = brain, target = temp, retimg = TRUE)
 }
 }
-

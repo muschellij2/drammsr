@@ -4,6 +4,7 @@
 #' @param version Version of DRAMMS to download
 #' @param ... arguments to pass to \code{\link{download.file}}
 #' @return Filename of downloaded file
+#' @importFrom utils download.file
 download_dramms <- function(
   version = "current", # Version of DRAMMS to download
   ... # arguments to pass to \code{\link{download.file}}
@@ -23,6 +24,7 @@ download_dramms <- function(
 #' @param tarfile Name ofDRAMMS source file
 #' @param install_dir where to put
 #' @return NULL
+#' @importFrom utils untar
 install_dramms = function(
   tarfile = NULL, 
   install_dir = "/usr/local/dramms"){

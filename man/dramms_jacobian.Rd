@@ -37,4 +37,3 @@ If \code{retimg = FALSE}, a the filename of the output image.
 \description{
 Runs DRAMMS-jacobian on deformation image to determine jacobian
 }
-

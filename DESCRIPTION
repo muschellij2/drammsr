@@ -2,7 +2,7 @@ Package: drammsr
 Type: Package
 Title: Installs DRAMMS (Deformable Registration via Attribute Matching and
     Mutual-Saliency Weighting) for Image Registration
-Version: 2.0
+Version: 2.1
 Date: 2016-09-23
 Author: John Muschelli
 Maintainer: John Muschelli <muschellij2@gmail.com>
@@ -14,9 +14,10 @@ License: BSD_3_clause + file LICENSE
 Imports:
     neurobase,
     fslr,
-    oro.nifti
+    oro.nifti,
+    utils
 SystemRequirements: 
-  cmake (http://www.cmake.org),
+  cmake 2.8.5-2.8.9 (http://www.cmake.org),
   FSL (http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation)
-RoxygenNote: 5.0.1
+RoxygenNote: 5.0.1.9000
 Remotes: muschellij2/neurobase,muschellij2/fslr

@@ -15,6 +15,7 @@
 #' @export
 #' @return Result of \code{\link{system}} command
 #' @importFrom oro.nifti convert.datatype datatype
+#' @importFrom neurobase check_nifti
 dramms_ravens <- function(
   label, # Filename (or nifti) to apply deformation field
   labs = NULL,
