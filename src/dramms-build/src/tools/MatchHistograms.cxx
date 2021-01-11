@@ -127,8 +127,8 @@ void smoothHistogram(float *hist)
 int main(int argc,char *argv[])
 {
     unsigned char ***imgA, ***imgB;
-    int           i, j, k, t;
-    float         *histoA, *histoB, *histoB_trans, *histoA_trans;
+    int           i, j, k;
+    float         *histoA, *histoB;
     float         *cumuHistA, *cumuHistB;
     float         *lookupTable;
     double        TotalIntensityA, TotalIntensityB, NonZeroPntsA, NonZeroPntsB ;

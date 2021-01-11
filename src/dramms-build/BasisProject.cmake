@@ -28,11 +28,11 @@
 #   # meta-data
 #   NAME             MyProject
 #   PROVIDER         PackageProvider
-#   VERSION          2.1.4
+#   VERSION          3.2.0
 #   DESCRIPTION      "This is the description of the project named"
 #                    " MyProject which follows BASIS."
 #   AUTHOR           "Max Muster"
-#   COPYRIGHT        "2011-2014 University of Pennsylvania"
+#   COPYRIGHT        "2011-2013 University of Pennsylvania"
 #   LICENSE          "See COPYING file."
 #   CONTACT          "SBIA Group <sbia-software at uphs.upenn.edu>"
 #   # ------------------------------------------------------------------------
@@ -43,7 +43,8 @@
 # )
 # @endcode
 #
-# Copyright (c) 2011--2014 University of Pennsylvania. All rights reserved.<br />
+# Copyright (c) 2011--2013 University of Pennsylvania. All rights reserved.<br />
+# Copyright (c) 2014--2016 Massachusetts General Hospital, Harvard Medical School. All rights reserved. <br />
 # See http://www.cbica.upenn.edu/sbia/software/license.html or COPYING file.
 #
 # Contact: SBIA Group <sbia-software at uphs.upenn.edu>
@@ -57,11 +58,11 @@ basis_project (
   # --------------------------------------------------------------------------
   # meta-data
   NAME        DRAMMS
-  PROVIDER    SBIA
-  VERSION     1.4.3  # always 0.0.0 in trunk, but should be the current version in braches and tags
+  VENDOR      SBIA UPenn, MGH, BCH
+  VERSION     1.5.2  # always 0.0.0 in trunk, but should be the current version in braches and tags
   DESCRIPTION "Deformable Registration via Attribute Matching and Mutual-Saliency weighting"
   AUTHORS     "Yangming Ou" "Aristeidis Sotiras" "Andreas Schuh"
-  COPYRIGHT   "2011--2014 University of Pennsylvania. Since Jan. 2014, revisions were done while Yangming Ou is working at the A. A. Martinos Biomedical Imaging Center, Massachusetts General Hospital, Harvard Medical School."
+  COPYRIGHT   "2011--2013 University of Pennsylvania. 2014--2016 Massachusetts General Hospital, Harvard Medical School. 2016--, Boston Childrens Hosptial, Harvard Medical School."
   LICENSE     "See http://www.cbica.upenn.edu/sbia/software/license.html or COPYING file."
   CONTACT     "SBIA Group <sbia-software at uphs.upenn.edu>"
   # --------------------------------------------------------------------------

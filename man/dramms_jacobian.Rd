@@ -4,9 +4,18 @@
 \alias{dramms_jacobian}
 \title{Calculate Jacobian Image}
 \usage{
-dramms_jacobian(source, target, def, outfile = NULL, retimg = FALSE,
-  smooth_def = FALSE, smooth_jacobian = FALSE, cut_jacobian = FALSE,
-  xy_switch_off = FALSE, log_jacobian = FALSE)
+dramms_jacobian(
+  source,
+  target,
+  def,
+  outfile = NULL,
+  retimg = FALSE,
+  smooth_def = FALSE,
+  smooth_jacobian = FALSE,
+  cut_jacobian = FALSE,
+  xy_switch_off = FALSE,
+  log_jacobian = FALSE
+)
 }
 \arguments{
 \item{source}{Filename (or nifti) to match to target}

@@ -20,7 +20,7 @@
 #include <common/cres.h>
 #include <common/matrix.h>
 #include <common/general.h>
-
+#include <common/utilities.h>
 
 #include <dramms/basis.h> // exename(), print_contact()
 
@@ -46,30 +46,57 @@ void print_help()
 {
     string exec_name = exename();
 	cout << "-------------------------------------------------" << endl;
-    cout << "This program calculates similarity metrics (CC/MI/NMI/SSD) of two input images. " << endl;
+	cout << "This program calculates similarity metrics (CC/MI/NMI/SSD) of two input images. " << endl;
 	cout << "-------------------------------------------------" << endl << endl;
-    cout << "Usage:" << endl;
-    cout << "  " << exec_name << " <input image 1> <input image 2>" << endl;
-    cout << endl;
-    cout << "Required arguments:" << endl;
+	cout << "Usage:" << endl;
+	cout << "  " << exec_name << " <input image 1> <input image 2>" << endl;
+	cout << endl;
+	cout << "Required arguments:" << endl;
 	cout << "  <input image 1>    file of the first input image." << endl;
-    cout << "  <input image 2>    file of the second input image." << endl;
-    cout << endl;
-    cout << "Optional arguments:" << endl;
+	cout << "  <input image 2>    file of the second input image." << endl;
+	cout << endl;
+	cout << "Optional arguments:" << endl;
 	cout << "  -C   : output correlation coefficient (CC)" <<endl;
 	cout << "  -M   : output mutual information (MI)" << endl;
 	cout << "  -N   : output normalized mutual information (NMI)" << endl;
 	cout << "  -D   : output sum of squared difference (SSD)" << endl;
+	cout << "  -I   : calculate CC/MI/NMI/SSD only in the intersection of two images (default: off, in which case the CC/MI/NMI/SSD are calculated in the whole image)";
 	cout << endl;
 	cout << "Example: " << endl;
 	cout << "  " << exec_name <<" A.img B.nii.gz -M" << endl;
+	cout << "  " << exec_name <<" A.img B.nii.gz -C -I" << endl;
 	cout << endl;
     print_contact();
 }
 
+// -------------------------------------------------
+float get5percentileintensity(Image *image)
+{
+	float  thre;
+	int    nbins=256;
+
+        float min, max;
+        GetIntensityRange(image, min, max);
+
+	float  binwidth = (max-min)/static_cast<int>(nbins-1);
+	// compute normalized cumulative histogram
+        float* histo = ComputeHistogram(image, nbins, false, min, max);
+        if (histo == NULL) {
+               BASIS_THROW(runtime_error, "Failed to allocate memory for histogram!");
+        }
+	histo[0]=0;
+        CumulateHistogram(NormalizeHistogram(histo, nbins), nbins);
+
+	int index=FindAdaptiveThreshold(histo, nbins);
+	if (index<0) index=0;
+	thre = min + static_cast<int>(index)*binwidth;
+	//cout << "max = " << max << ", min = " << min << ", index = " << index << ", thre = " << thre << endl;
+
+	return thre;
+}
 
 // -------------------------------------------------
-float computeCorrelationCoefficient(Image *source, Image *target)
+float computeCorrelationCoefficient(Image *source, Image *target, int intersection)
 {
 	double sumIntensityA = 0.0;
 	double sumIntensityB = 0.0;
@@ -80,11 +107,20 @@ float computeCorrelationCoefficient(Image *source, Image *target)
 	double cc;
    
 	int i,j,k;
+	int totalNumVoxels=0;
 	
 	Fvector3d resampleRatio;
 	resampleRatio.x = static_cast<double>(source->region.nx) / static_cast<double>(target->region.nx) ;
 	resampleRatio.y = static_cast<double>(source->region.ny) / static_cast<double>(target->region.ny) ;
 	resampleRatio.z = static_cast<double>(source->region.nz) / static_cast<double>(target->region.nz) ;
+
+	float threS=0;
+	float threT=0;
+	if (intersection) {
+		threS = get5percentileintensity(source);
+		threT = get5percentileintensity(target);
+		}
+	   //cout<<"threS=" << threS << ", threT=" << threT << endl;
 	
 	   // calculate denominator and numerator
 	   double intensity;
@@ -97,17 +133,27 @@ float computeCorrelationCoefficient(Image *source, Image *target)
                                        static_cast<float>(j) * resampleRatio.y,
                                        static_cast<float>(k) * resampleRatio.z);
 			
-			 sumIntensityA        += intensity;
-			 sumIntensityB        += static_cast<double>(target->img.uc[k][i][j]);
-			 sumIntensityAxB      += static_cast<double>(intensity*target->img.uc[k][i][j]);
-			 sumIntensityAsquared += static_cast<double>(intensity*intensity);
-			 sumIntensityBsquared += static_cast<double>(target->img.uc[k][i][j]*target->img.uc[k][i][j]);
-			 }
+			 if ( (intersection==1&&intensity>threS&&target->img.uc[k][i][j]>threT) || (intersection==0) ) {
+				 sumIntensityA        += intensity;
+				 sumIntensityB        += static_cast<double>(target->img.uc[k][i][j]);
+				 sumIntensityAxB      += static_cast<double>(intensity*target->img.uc[k][i][j]);
+				 sumIntensityAsquared += static_cast<double>(intensity*intensity);
+				 sumIntensityBsquared += static_cast<double>(target->img.uc[k][i][j]*target->img.uc[k][i][j]);
 
-      int totalNumVoxels = target->region.nx * target->region.ny * target->region.nz;		
+				 totalNumVoxels++;
+			 }
+			 }
+	  //cout<<"totalNumVoxels=" << totalNumVoxels << endl;
+	  //cout<<"sumIntensityA=" << sumIntensityA << endl;
+ 	  //cout<<"sumIntensityB=" << sumIntensityB << endl;
+	  //cout<<"sumIntensityAxB=" << sumIntensityAxB << endl;
+	  //cout<<"sumIntensityAsquared=" << sumIntensityAsquared << endl;
+	  //cout<<"sumIntensityBsquared=" << sumIntensityBsquared << endl;
+	  totalNumVoxels = target->region.nx * target->region.ny * target->region.nz;		
 	  numerator          = static_cast<double>(totalNumVoxels)*sumIntensityAxB - sumIntensityA*sumIntensityB;
 	  denominator        = sqrt( static_cast<double>(totalNumVoxels)*sumIntensityAsquared - sumIntensityA*sumIntensityA ) * sqrt( static_cast<double>(totalNumVoxels)*sumIntensityBsquared - sumIntensityB*sumIntensityB );
-
+	  //cout << "numerator=" << numerator << endl;
+	  //cout << "denominator=" << denominator << endl;
 	  if (denominator!=0.0)
 		cc = numerator/denominator;
 	  
@@ -119,19 +165,27 @@ float computeCorrelationCoefficient(Image *source, Image *target)
 
 
 // -------------------------------------------------
-float computeMutualInformation(Image *source, Image *target)
+float computeMutualInformation(Image *source, Image *target, int intersection)
 {
 	  int numBins=64; //default
 	  float interval = 256.0/static_cast<float>(numBins);
 	  float hist1[numBins], hist2[numBins], jointHist[numBins][numBins];
 	  int i,j,k;
-	  
+	  int totalNumVoxelsforeground=0;
 	  
 	  Fvector3d resampleRatio;
 	  resampleRatio.x = static_cast<float>(source->region.nx) / static_cast<float>(target->region.nx) ;
 	  resampleRatio.y = static_cast<float>(source->region.ny) / static_cast<float>(target->region.ny) ;
 	  resampleRatio.z = static_cast<float>(source->region.nz) / static_cast<float>(target->region.nz) ;
 	
+
+        float threS=0;
+        float threT=0;
+        if (intersection) {
+                threS = get5percentileintensity(source);
+                threT = get5percentileintensity(target);
+                }
+
 	   // initialize histograms
 	   for (i=0; i<numBins; i++)
 		 {
@@ -153,9 +207,12 @@ float computeMutualInformation(Image *source, Image *target)
                                        static_cast<float>(j) * resampleRatio.y,
                                        static_cast<float>(k) * resampleRatio.z);
 
-			 hist1[static_cast<int>(intensity/interval)] += 1.0;
-			 hist2[static_cast<int>(static_cast<float>(target->img.uc[k][i][j])/interval)] += 1.0;
-			 jointHist[static_cast<int>(intensity/interval)][static_cast<int>(static_cast<float>(target->img.uc[k][i][j])/interval)] += 1.0;
+			 if ( (intersection==1&&intensity>threS&&target->img.uc[k][i][j]>threT) || (intersection==0) ) {
+				 hist1[static_cast<int>(intensity/interval)] += 1.0;
+				 hist2[static_cast<int>(static_cast<float>(target->img.uc[k][i][j])/interval)] += 1.0;
+				 jointHist[static_cast<int>(intensity/interval)][static_cast<int>(static_cast<float>(target->img.uc[k][i][j])/interval)] += 1.0;
+  				 totalNumVoxelsforeground++;
+			 }
 			 }
 			 
 	  // calculate entropies
@@ -163,6 +220,9 @@ float computeMutualInformation(Image *source, Image *target)
 	  float entropy1 = 0.0;
 	  float entropy2 = 0.0;
 	  float jointEntropy = 0.0;
+	  hist1[0] += (totalNumVoxels-totalNumVoxelsforeground);
+	  hist2[0] += (totalNumVoxels-totalNumVoxelsforeground);
+	  jointHist[0][0] += (totalNumVoxels-totalNumVoxelsforeground);
 	  for (i=0; i<numBins; i++)
 		{
 		hist1[i] /= static_cast<float>(totalNumVoxels);
@@ -196,12 +256,13 @@ float computeMutualInformation(Image *source, Image *target)
 
 
 // -------------------------------------------------
-float computeNormalizedMutualInformation(Image *source, Image *target)
+float computeNormalizedMutualInformation(Image *source, Image *target, int intersection)
 {
 	  int numBins=64; //default
 	  float interval = 256.0/static_cast<float>(numBins);
 	  float hist1[numBins], hist2[numBins], jointHist[numBins][numBins];
 	  int i,j,k;
+	  int totalNumVoxelsforeground=0;
 	  
 	  
 	  Fvector3d resampleRatio;
@@ -209,6 +270,15 @@ float computeNormalizedMutualInformation(Image *source, Image *target)
 	  resampleRatio.y = static_cast<float>(source->region.ny) / static_cast<float>(target->region.ny) ;
 	  resampleRatio.z = static_cast<float>(source->region.nz) / static_cast<float>(target->region.nz) ;
 	
+
+        float threS=0;
+        float threT=0;
+        if (intersection) {
+                threS = get5percentileintensity(source);
+                threT = get5percentileintensity(target);
+                }
+
+
 	   // initialize histograms
 	   for (i=0; i<numBins; i++)
 		 {
@@ -230,9 +300,12 @@ float computeNormalizedMutualInformation(Image *source, Image *target)
                                        static_cast<float>(j) * resampleRatio.y,
                                        static_cast<float>(k) * resampleRatio.z);
 
-			 hist1[static_cast<int>(intensity/interval)] += 1.0;
-			 hist2[static_cast<int>(static_cast<float>(target->img.uc[k][i][j])/interval)] += 1.0;
-			 jointHist[static_cast<int>(intensity/interval)][static_cast<int>(static_cast<float>(target->img.uc[k][i][j])/interval)] += 1.0;
+			 if ( (intersection==1&&intensity>threS&&target->img.uc[k][i][j]>threT) || (intersection==0) ) {
+				 hist1[static_cast<int>(intensity/interval)] += 1.0;
+				 hist2[static_cast<int>(static_cast<float>(target->img.uc[k][i][j])/interval)] += 1.0;
+				 jointHist[static_cast<int>(intensity/interval)][static_cast<int>(static_cast<float>(target->img.uc[k][i][j])/interval)] += 1.0;
+				 totalNumVoxelsforeground++;
+			 }
 			 }
 			 
 	  // calculate entropies
@@ -240,6 +313,9 @@ float computeNormalizedMutualInformation(Image *source, Image *target)
 	  float entropy1 = 0.0;
 	  float entropy2 = 0.0;
 	  float jointEntropy = 0.0;
+	  hist1[0] += (totalNumVoxels-totalNumVoxelsforeground);
+          hist2[0] += (totalNumVoxels-totalNumVoxelsforeground);
+	  jointHist[0][0] += (totalNumVoxels-totalNumVoxelsforeground);
 	  for (i=0; i<numBins; i++)
 		{
 		hist1[i] /= static_cast<float>(totalNumVoxels);
@@ -271,7 +347,7 @@ float computeNormalizedMutualInformation(Image *source, Image *target)
 
 
 // -------------------------------------------------
-float computeSumSquaredDifference(Image *source, Image *target)
+float computeSumSquaredDifference(Image *source, Image *target, int intersection)
 {
 	  int i,j,k;
 	  
@@ -280,6 +356,15 @@ float computeSumSquaredDifference(Image *source, Image *target)
 	  resampleRatio.y = static_cast<float>(source->region.ny) / static_cast<float>(target->region.ny) ;
 	  resampleRatio.z = static_cast<float>(source->region.nz) / static_cast<float>(target->region.nz) ;
 	
+
+        float threS=0;
+        float threT=0;
+        if (intersection) {
+                threS = get5percentileintensity(source);
+                threT = get5percentileintensity(target);
+                }
+
+
 	   float intensity;
 	   float ssd=0;
 	   float diff;
@@ -292,8 +377,10 @@ float computeSumSquaredDifference(Image *source, Image *target)
                                        static_cast<float>(j) * resampleRatio.y,
                                        static_cast<float>(k) * resampleRatio.z);
 
-			 diff = static_cast<float>(intensity - target->img.uc[k][i][j]);
-			 ssd += diff*diff;
+			 if ( (intersection==1&&intensity>threS&&target->img.uc[k][i][j]>threT) || (intersection==0) ) {
+				 diff = static_cast<float>(intensity - target->img.uc[k][i][j]);
+				 ssd += diff*diff;
+			 }
 			 }
 			 
 	  printf("\nSSD = %f\n\n", ssd);
@@ -314,15 +401,15 @@ int main(int argc,char *argv[])
     }
 
   int metric=CC; // default
-  
+  int intersection=0; // by default, calculate similarity in the whole image. 
   
   int c=-1;
-  while((c=getopt(argc,argv,"CMNDv")) != -1)
+  while((c=getopt(argc,argv,"CMNDIv")) != -1)
     {
       switch(c)
 	{
 	case 'C':
-	    metric=CC;
+		metric=CC;
 		break;
 	
 	case 'M':
@@ -335,6 +422,10 @@ int main(int argc,char *argv[])
 		
 	case 'D':
 		metric=SSD;
+		break;
+	
+	case 'I':
+		intersection=1;
 		break;
 		
     case 'v':
@@ -374,19 +465,19 @@ int main(int argc,char *argv[])
   switch (metric)
 	{
 	case CC:
-		computeCorrelationCoefficient(imageA, imageB);
+		computeCorrelationCoefficient(imageA, imageB, intersection);
 		break;
 		
 	case MI:
-		computeMutualInformation(imageA, imageB);
+		computeMutualInformation(imageA, imageB, intersection);
 		break;
 		
 	case NMI:
-		computeNormalizedMutualInformation(imageA, imageB);
+		computeNormalizedMutualInformation(imageA, imageB, intersection);
 		break;
 		
 	case SSD:
-		computeSumSquaredDifference(imageA, imageB);
+		computeSumSquaredDifference(imageA, imageB, intersection);
 		break;
 	}
 	

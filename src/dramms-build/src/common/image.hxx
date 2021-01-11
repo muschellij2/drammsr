@@ -2,10 +2,13 @@
  * @file  image.hxx
  * @brief Definition of template and inline functions declared in image.h.
  *
- * Copyright (c) 2011, 2012 University of Pennsylvania. All rights reserved.<br />
+ * Copyright (c) 2011-2013 University of Pennsylvania. All rights reserved.<br />
+ * Copyright (c) 2014-2016 Massachusetts General Hospital, Harvard Medical School. All rights reserved. <br />
+ * Copyright (c) 2016-     Boston Childrens Hospital, Harvard Medical School. All rights reserved. <br />
+ *
  * See http://www.rad.upenn.edu/sbia/software/license.html or COPYING file.
  *
- * Contact: SBIA Group <sbia-software at uphs.upenn.edu>
+ * Contact: Yangming Ou <yangming.ou@mgh.harvard.edu>; SBIA Group <sbia-software at uphs.upenn.edu>
  */
 
 #pragma once
@@ -162,6 +165,111 @@ inline float Image::value(float i, float j, float k, int n) const
                  value<float>(iCeil,  jFloor, kCeil,  n) * (a * B) +
                  value<float>(iFloor, jCeil,  kCeil,  n) * (A * b) +
                  value<float>(iCeil,  jCeil,  kCeil,  n) * (a * b)));
+}
+
+// ---------------------------------------------------------------------------
+inline float Image::sincvalue(float i, float j, int k, int n) const
+{
+    float sumweight=0;
+    float sumvalue=0;
+    float w, wi, wj;
+    int   radius=5;    // default
+
+	if (i < 0 || i > region.nx - 1 ||
+            j < 0 || j > region.ny - 1 ||
+            k < 0 || k > region.nz - 1) {
+        return 0.0f;
+    }
+
+    int iFloor = static_cast<int>(floor(i));
+    int jFloor = static_cast<int>(floor(j));
+
+    int    ii, iiStart, iiEnd;
+    int    jj, jjStart, jjEnd;
+    float  di, dj;
+    iiStart = iFloor+1-radius;  if (iiStart<0)         iiStart = 0;
+    iiEnd   = iFloor  +radius;  if (iiEnd>region.nx-1) iiEnd   = region.nx-1;
+    jjStart = jFloor+1-radius;  if (jjStart<0)         jjStart = 0;
+    jjEnd   = jFloor  +radius;  if (jjEnd>region.ny-1) jjEnd   = region.ny-1;
+
+    for (ii=iiStart; ii<iiEnd; ii++)
+	for (jj=jjStart; jj<jjEnd; jj++) {
+		di = i-ii;
+		dj = j-jj;
+		// sinc interpolation see this page: https://itk.org/Doxygen/html/classitk_1_1WindowedSincInterpolateImageFunction.html
+		// windowed sinc, see this ITK page: https://itk.org/Doxygen/html/classitk_1_1Function_1_1CosineWindowFunction.html
+		wi = cos(E_PI*di/(2*radius)) * sin(E_PI*di)/(E_PI*di);
+		wj = cos(E_PI*dj/(2*radius)) * sin(E_PI*dj)/(E_PI*dj);
+		w  = wi * wj;
+		sumweight += w;
+		sumvalue  += w * value<float>(ii, jj, k, n);
+	}
+
+    if ( sumweight != 0 )
+	sumvalue /= sumweight;
+
+    return sumvalue;
+}
+
+// ---------------------------------------------------------------------------
+inline float Image::sincvalue(float i, float j, float k, int n) const
+{
+    float sumweight=0;
+    float sumvalue=0;
+    float w, wi, wj, wk;
+    int   radius=5;    // default
+
+
+	if (i<0 && i>-0.5) i=0.0;
+	if (j<0 && j>-0.5) j=0.0;
+	if (k<0 && k>-0.5) k=0.0;
+	if (i>region.nx-1 && i<region.nx-0.5) i=static_cast<float>(region.nx-1);
+	if (j>region.ny-1 && j<region.ny-0.5) j=static_cast<float>(region.ny-1);
+	if (k>region.nz-1 && k<region.nz-0.5) k=static_cast<float>(region.nz-1);
+	
+    if (i < 0 || i > region.nx - 1 ||
+            j < 0 || j > region.ny - 1 ||
+            k < 0 || k > region.nz - 1) {
+        return 0.0f;
+    }
+
+    int iFloor = static_cast<int>(floor(i));
+    int jFloor = static_cast<int>(floor(j));
+    int kFloor = static_cast<int>(floor(k));
+
+    int    ii, iiStart, iiEnd;
+    int    jj, jjStart, jjEnd;
+    int    kk, kkStart, kkEnd;
+    float  di, dj, dk;
+
+    iiStart = iFloor+1-radius;  if (iiStart<0)         iiStart = 0;
+    iiEnd   = iFloor  +radius;  if (iiEnd>region.nx-1) iiEnd   = region.nx-1;
+    jjStart = jFloor+1-radius;  if (jjStart<0)         jjStart = 0;
+    jjEnd   = jFloor  +radius;  if (jjEnd>region.ny-1) jjEnd   = region.ny-1;
+    kkStart = kFloor+1-radius;  if (kkStart<0)         kkStart = 0;
+    kkEnd   = kFloor  +radius;  if (kkEnd>region.nz-1) kkEnd   = region.nz-1;
+
+
+    for (ii=iiStart; ii<iiEnd; ii++)
+        for (jj=jjStart; jj<jjEnd; jj++) 
+		for (kk=kkStart; kk<kkEnd; kk++) {
+	                di = i-ii;
+        	        dj = j-jj;
+			dk = k-kk;
+                	// sinc interpolation see this page: https://itk.org/Doxygen/html/classitk_1_1WindowedSincInterpolateImageFunction.html
+	                // windowed sinc, see this ITK page: https://itk.org/Doxygen/html/classitk_1_1Function_1_1CosineWindowFunction.html
+        	        wi = cos(E_PI*di/(2*radius)) * sin(E_PI*di)/(E_PI*di);
+                	wj = cos(E_PI*dj/(2*radius)) * sin(E_PI*dj)/(E_PI*dj);
+			wk = cos(E_PI*dk/(2*radius)) * sin(E_PI*dk)/(E_PI*dk);
+                	w  = wi * wj * wk;
+	                sumweight += w;
+        	        sumvalue  += w * value<float>(ii, jj, k, n);
+	          }
+
+    if ( sumweight != 0 )
+         sumvalue /= sumweight;
+
+    return sumvalue;
 }
 
 // ---------------------------------------------------------------------------

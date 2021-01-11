@@ -4,8 +4,15 @@
 \alias{dramms_ravens}
 \title{Run DRAMMS RAVENS Map}
 \usage{
-dramms_ravens(label, labs = NULL, template, def, prefix,
-  scale_factor = NULL, verbose = TRUE)
+dramms_ravens(
+  label,
+  labs = NULL,
+  template,
+  def,
+  prefix,
+  scale_factor = NULL,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{label}{label image in subject space. 

@@ -4,9 +4,15 @@
 \alias{dramms_warp}
 \title{Run DRAMMS Warping}
 \usage{
-dramms_warp(source, def = NULL, outfile = NULL,
-  interpolation = c("trilinear", "nearest.neighbor"), template = NULL,
-  retimg = FALSE, verbose = TRUE)
+dramms_warp(
+  source,
+  def = NULL,
+  outfile = NULL,
+  interpolation = c("trilinear", "nearest.neighbor"),
+  template = NULL,
+  retimg = FALSE,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{source}{Filename (or nifti) to match to target}

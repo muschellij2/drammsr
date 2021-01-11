@@ -2,8 +2,8 @@ Package: drammsr
 Type: Package
 Title: Installs DRAMMS (Deformable Registration via Attribute Matching and
     Mutual-Saliency Weighting) for Image Registration
-Version: 2.1
-Date: 2016-09-23
+Version: 2.2.0
+Date: 2020-01-11
 Author: John Muschelli
 Maintainer: John Muschelli <muschellij2@gmail.com>
 Description: DRAMMS performs registration with weighting of saliency features.
@@ -19,5 +19,5 @@ Imports:
 SystemRequirements: 
   cmake 2.8.5-2.8.9 (http://www.cmake.org),
   FSL (http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation)
-RoxygenNote: 5.0.1.9000
+RoxygenNote: 7.1.1
 Remotes: muschellij2/neurobase,muschellij2/fslr

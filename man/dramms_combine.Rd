@@ -4,8 +4,13 @@
 \alias{dramms_combine}
 \title{Combine DRAMMS Deformation}
 \usage{
-dramms_combine(indef1, indef2, outfile = NULL, retimg = FALSE,
-  operation = c("concatenate", "add", "subtract", "mean"))
+dramms_combine(
+  indef1,
+  indef2,
+  outfile = NULL,
+  retimg = FALSE,
+  operation = c("concatenate", "add", "subtract", "mean")
+)
 }
 \arguments{
 \item{indef1}{Input Deformation Field 1}

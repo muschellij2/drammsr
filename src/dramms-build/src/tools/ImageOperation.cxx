@@ -73,7 +73,7 @@ void PrintImageHeader(const Image* image)
         cout << endl;
     }
     cout << "sform_code     " << hdr.sform_code << endl;
-    Image::Transform sto_xyz = GetSFormTransform(hdr, Image::FORMAT_ITK);
+    //Image::Transform sto_xyz = GetSFormTransform(hdr, Image::FORMAT_ITK);
     cout << "sto_xyz:1" << "  ";
     for (int c = 0; c < 4; c++) {
         if (signbit(hdr.srow_x[c]) == 0) cout << " ";

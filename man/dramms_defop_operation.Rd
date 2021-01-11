@@ -4,9 +4,13 @@
 \alias{dramms_defop_operation}
 \title{Run DRAMMS Multiplication or Division}
 \usage{
-dramms_defop_operation(def = NULL, factor = NULL,
-  operation = c("multiply", "divide", "square", "sqrt"), outfile = NULL,
-  retimg = FALSE)
+dramms_defop_operation(
+  def = NULL,
+  factor = NULL,
+  operation = c("multiply", "divide", "square", "sqrt"),
+  outfile = NULL,
+  retimg = FALSE
+)
 }
 \arguments{
 \item{def}{deformation field}

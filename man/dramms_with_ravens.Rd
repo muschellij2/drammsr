@@ -4,9 +4,18 @@
 \alias{dramms_with_ravens}
 \title{Run DRAMMS with RAVENS option}
 \usage{
-dramms_with_ravens(source, target, outfile = NULL, outdef = NULL,
-  retimg = FALSE, opts = NULL, label, labs = NULL, ravens_prefix = NULL,
-  verbose = TRUE)
+dramms_with_ravens(
+  source,
+  target,
+  outfile = NULL,
+  outdef = NULL,
+  retimg = FALSE,
+  opts = NULL,
+  label,
+  labs = NULL,
+  ravens_prefix = NULL,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{source}{Filename (or nifti) to match to target}

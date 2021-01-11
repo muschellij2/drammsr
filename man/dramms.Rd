@@ -4,8 +4,15 @@
 \alias{dramms}
 \title{Run DRAMMS}
 \usage{
-dramms(source, target, outfile = NULL, outdef = NULL, retimg = FALSE,
-  opts = NULL, verbose = TRUE)
+dramms(
+  source,
+  target,
+  outfile = NULL,
+  outdef = NULL,
+  retimg = FALSE,
+  opts = NULL,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{source}{Filename (or nifti) to match to target}

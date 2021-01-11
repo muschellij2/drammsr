@@ -42,6 +42,7 @@ using namespace dramms;
 
 #define SSD  0
 #define CC   1
+#define CR   2
 #define MINCPDISTXY 3
 #define MINCPDISTZ  1
 
@@ -101,22 +102,23 @@ void print_help()
 	cout << "                        where 0: nearest neighborhood, 1: trilinear, 2: cubic B-spline. (default: 2) " << endl;
 	cout << "  -M <int>              Defines the way the pairwise potential is calculated, where" << endl;
 	cout << "                        0: pott's distance, 1: truncated absolute difference," << endl;
-    cout << "                        2: truncated quadratic differences. (default: 1)" << endl;
-    cout << "  -t <int>              Theshold for maximum cost for the pairwise potential. (default: 1)" << endl;
-    cout << "  -w <int>              Request the use of the spatially-varying weight when  projecting" << endl;
+	cout << "                        2: truncated quadratic differences. (default: 1)" << endl;
+	cout << "  -t <int>              Theshold for maximum cost for the pairwise potential. (default: 1)" << endl;
+	cout << "  -w <int>              Request the use of the spatially-varying weight when  projecting" << endl;
 	cout << "                        the cost to the control points, where 0: no, 1: yes. (default: 1)" << endl;
 	cout << "  -g <float>            Regularization weight controlling deformation aggressiveness. (default: 0.1) " << endl;
 	cout << "  -S <int>              Similarity measure on attribute vectors, where 0: vector difference," << endl;
-    cout << "                        1: vector correlation coefficent. (default: 0)" << endl;
+	cout << "                        1: vector-wise normalized correlation coefficent. (default: 0)" << endl;
+	cout << "                        2: vector-wise correlation ratio" << endl;
 	cout << endl;
-    cout << "Standard arguments:" << endl;
-    cout << "  -v                    Increase verbosity of output messages." << endl;
-    cout << "  -h                    Print help and exit." << endl;
-    cout << endl;
+	cout << "Standard arguments:" << endl;
+	cout << "  -v                    Increase verbosity of output messages." << endl;
+	cout << "  -h                    Print help and exit." << endl;
+	cout << endl;
 	cout << "Example:" << endl;
-    cout << "  " << exec_name << " A.nii.gz B.nii.gz Gabor_ A2B.nii.gz def_A2B.nii.gz -r3 -b7,2 -C1 -g0.2 " << endl;
-    cout << endl;
-    print_contact();
+	cout << "  " << exec_name << " A.nii.gz B.nii.gz Gabor_ A2B.nii.gz def_A2B.nii.gz -r3 -b7,2 -C1 -g0.2 " << endl;
+	cout << endl;
+	print_contact();
 }
 
 
@@ -218,6 +220,7 @@ void calculateConfidenceMap(float ****featureMapA2BIterative, unsigned char ****
 void calculateConfidenceMap3D(float ****featureMapA2BIterative, unsigned char ****featureMapB, unsigned char ***mask, Ivector3d imageSize, int numFeatures, int levelIndex, int distBetweenControlPointsX, int distBetweenControlPointsY, int distBetweenControlPointsZ, int SimilarityMeasure, float ***confidenceMap);
 float calculateEuclideanDistanceBetweenTwoFeatureVectors(float ****featureMapA2B, unsigned char ****featureMapB, int xA, int yA, int zA, int xB, int yB, int zB, int numFeatures);
 float calculateCorrelationCoefficientBetweenTwoFeatureVectors(float ****featureMapA2B, unsigned char ****featureMapB, int xA, int yA, int zA, int xB, int yB, int zB, int numFeatures);
+float calculateCorrelationRatioBetweenTwoFeatureVectors(float ****featureMapA2B, unsigned char ****featureMapB, int xA, int yA, int zA, int xB, int yB, int zB, int numFeatures);
 void ApplyDeformationFieldOnImage(unsigned char ***image, Fvector3d ***dfFieldB2A, Ivector3d imageSize, unsigned char ***imageA2B);
 void ApplyDeformationFieldOnFeatures(unsigned char ****featureMapA, unsigned char ****featureMapB, int numFeatures, Ivector3d imageSize, Fvector3d ***dfFieldB2A, float ****featureMapA2BInitialized);
 void IncorporateInitialDeformation(Fvector3d*** def, Fvector3d*** init_def, Ivector3d defsize, int levelIndex, int numImgLevels);
@@ -396,9 +399,9 @@ int main(int argc,char *argv[])
         exit(1);
     }
 	
-   if ( (SimilarityMeasure!=SSD)&(SimilarityMeasure!=CC) ) 
+   if ( (SimilarityMeasure!=SSD)&(SimilarityMeasure!=CC)&(SimilarityMeasure!=CR) ) 
 		{
-		printf("\n\Error: DRAMMS only accepts SSD (-S0, default) or CC (-S1) as similarity measures!\n\n");
+		printf("\n\Error: DRAMMS only accepts SSD (-S0, default) or CC (-S1) or CR (-S2) as similarity measures!\n\n");
 		exit(1);
 		}
 
@@ -4965,7 +4968,7 @@ void calculateConfidenceMap(float ****featureMapA2BIterative, unsigned char ****
    } // for (zB=0;zB<imageSize.z;zB++)
   } // if (SimilarityMeasure==SSD)
 
-  if (SimilarityMeasure==CC)
+  if ( (SimilarityMeasure==CC)||(SimilarityMeasure==CR) )
   {
   #pragma omp parallel for private(xB,yB,zB,confidence,maxSim,s,t,xA2B,yA2B,zA2B,dist,sim,maxConfidenceTimesSim,simThre,sum_CN,mean_CN,sum_PN,mean_PN,counter,p,q,confidenceTimesSim) num_threads(100)
   for (zB=0;zB<imageSize.z;zB++)
@@ -4994,7 +4997,11 @@ void calculateConfidenceMap(float ****featureMapA2BIterative, unsigned char ****
 			
 			if ( (xA2B>=0)&(xA2B<imageSize.x)&(yA2B>=0)&(yA2B<imageSize.y)&(zA2B>=0)&(zA2B<imageSize.z) )
 			  {
-			  sim = calculateCorrelationCoefficientBetweenTwoFeatureVectors(featureMapA2BIterative, featureMapB, xA2B, yA2B, zA2B, xB, yB, zB, numFeatures);
+			printf("similarityMeasure=%d\n", SimilarityMeasure);
+			  if (SimilarityMeasure==CC)
+				  sim = calculateCorrelationCoefficientBetweenTwoFeatureVectors(featureMapA2BIterative, featureMapB, xA2B, yA2B, zA2B, xB, yB, zB, numFeatures);
+			  else
+				  sim = calculateCorrelationRatioBetweenTwoFeatureVectors(featureMapA2BIterative, featureMapB, xA2B, yA2B, zA2B, xB, yB, zB, numFeatures);
 			  matSim->data[ss][tt] = sim;
 			  if (sim>maxSim)   maxSim=sim;
 			  }
@@ -5289,7 +5296,7 @@ void calculateConfidenceMap3D(float ****featureMapA2BIterative, unsigned char **
    } // for (zB=0;zB<imageSize.z;zB++)
   } // if (SimilarityMeasure==SSD)
 
-  if (SimilarityMeasure==CC)
+  if ( (SimilarityMeasure==CC)||(SimilarityMeasure==CR) )
   {
   #pragma omp parallel for private(xB,yB,zB,confidence,maxSim,s,t,xA2B,yA2B,zA2B,dist,sim,maxConfidenceTimesSim,simThre,sum_CN,mean_CN,sum_PN,mean_PN,counter,p,q,confidenceTimesSim) num_threads(100)
   for (zB=0;zB<imageSize.z;zB++)
@@ -5320,7 +5327,10 @@ void calculateConfidenceMap3D(float ****featureMapA2BIterative, unsigned char **
 			
 			if ( (xA2B>=0)&(xA2B<imageSize.x)&(yA2B>=0)&(yA2B<imageSize.y)&(zA2B>=0)&(zA2B<imageSize.z) )
 			  {
-			  sim = calculateCorrelationCoefficientBetweenTwoFeatureVectors(featureMapA2BIterative, featureMapB, xA2B, yA2B, zA2B, xB, yB, zB, numFeatures);
+			  if (SimilarityMeasure==CC)
+				sim = calculateCorrelationCoefficientBetweenTwoFeatureVectors(featureMapA2BIterative, featureMapB, xA2B, yA2B, zA2B, xB, yB, zB, numFeatures);
+			  else
+				sim = calculateCorrelationRatioBetweenTwoFeatureVectors(featureMapA2BIterative, featureMapB, xA2B, yA2B, zA2B, xB, yB, zB, numFeatures);
 			  matSim[rr][ss][tt] = sim;
 			  if (sim>maxSim)   maxSim=sim;
 			  }
@@ -5455,7 +5465,7 @@ float calculateEuclideanDistanceBetweenTwoFeatureVectors(float ****featureMapA2B
 }
 
 // ---------------------------------------------------------------------------
-// calculate correlation coefficient between feature vectors
+// calculate normalized correlation coefficient between feature vectors
 float calculateCorrelationCoefficientBetweenTwoFeatureVectors(float ****featureMapA2B, unsigned char ****featureMapB, int xA, int yA, int zA, int xB, int yB, int zB, int numFeatures)
 {
    float cc=0.0;
@@ -5491,9 +5501,79 @@ float calculateCorrelationCoefficientBetweenTwoFeatureVectors(float ****featureM
    if ( (varA<=0)||(varB<=0) ) 
 	   cc=0.0;
    else
-	   cc = covAB/sqrt(varA*varB);
+	   cc = fabs(covAB/sqrt(varA*varB));  // added the abs() operator on 9/2/2018
+
+
+   if (isnan(cc))
+	cc=0.0;
    
    return cc;
+}
+
+
+// ---------------------------------------------------------------------------
+// calculate correlation ratio between feature vectors (added on 9/2/2018)
+float calculateCorrelationRatioBetweenTwoFeatureVectors(float ****featureMapA2B, unsigned char ****featureMapB, int xA, int yA, int zA, int xB, int yB, int zB, int numFeatures)
+{
+    float cr=0.0;
+    int   numBins=32;
+    float mu[numBins];
+    float sigma[numBins];
+    float sumAsq[numBins];
+    int   Nmembers[numBins];
+    float overall_mu=0.0;
+    float overall_sigma=0.0;
+    int   binIndex;
+    int   featureIndex;
+    float overall_sumAsq=0.0;
+    float binWidth = 256.1 / (float)numBins;
+    float sum_across_bins = 0.0;
+
+    // initialization
+    for (binIndex=0; binIndex<numBins; binIndex++)
+	{
+		mu[binIndex]=0.0;
+		sigma[binIndex]=0.0;
+		sumAsq[binIndex]=0.0;
+		Nmembers[binIndex]=0;
+	}
+
+    // 
+    for (featureIndex=0; featureIndex<numFeatures; featureIndex++)
+        {
+		overall_mu += featureMapA2B[featureIndex][zA][xA][yA];
+                overall_sumAsq += featureMapA2B[featureIndex][zA][xA][yA] * featureMapA2B[featureIndex][zA][xA][yA];
+
+		binIndex = floor( (float)featureMapB[featureIndex][zA][xA][yA]/binWidth );  // histogram bin determined by B
+		mu[binIndex] += featureMapA2B[featureIndex][zA][xA][yA];
+		sumAsq[binIndex] += featureMapA2B[featureIndex][zA][xA][yA] * featureMapA2B[featureIndex][zA][xA][yA];
+		Nmembers[binIndex] += 1 ;
+	}
+
+
+    // 
+    overall_mu /= (float)numFeatures;
+    overall_sigma = overall_sumAsq/(float)numFeatures - overall_mu*overall_mu;
+    for (binIndex=0; binIndex<numBins; binIndex++)
+	{
+		if ( Nmembers[binIndex] > 0 ) 
+			{
+			mu[binIndex] /= (float)Nmembers[binIndex];
+			sigma[binIndex] = sumAsq[binIndex]/(float)Nmembers[binIndex] - mu[binIndex]*mu[binIndex];
+			sum_across_bins += (float)Nmembers[binIndex]*sigma[binIndex];
+			}
+	}
+
+    //printf("overall_mu=%f, overall_sigma=%f, sum_across_bins=%f\n", overall_mu, overall_sigma, sum_across_bins);
+    if (overall_sigma>0)
+	cr = 1.0 - sum_across_bins/( (float)numFeatures*overall_sigma );
+    else
+	cr=0.0;
+
+    if (isnan(cr))
+	cr=0.0;
+
+    return cr;
 }
 
 // ---------------------------------------------------------------------------

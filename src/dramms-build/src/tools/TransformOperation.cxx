@@ -8,10 +8,13 @@
  * as they do not apply to affine transformation matrices.
  *
  * Copyright (c) 2012-2014 University of Pennsylvania. All rights reserved.<br />
- * Copyright (c) 2014 Massachusetts General Hospital, Harvard Medical School.<br />
+ * Copyright (c) 2014-2016 Massachusetts General Hospital, Harvard Medical School.<br />
+ * Copyright (c) 2016-     Boston Childrens Hospital, Harvard Medical Schoo. <br />
  * See http://www.rad.upenn.edu/sbia/software/license.html or COPYING file.
  *
+ * Contact: Yangming Ou <yangming.ou@mgh.harvard.edu>
  * Contact: SBIA Group <sbia-software at uphs.upenn.edu>
+ * 
  */
 
 #include <iostream>
@@ -54,6 +57,7 @@ Fvector3d PrintDisplacementQuantities(Image* deffield)
     }
 
     Ivector3d         posmaxmag; // coordinate of maximum magnitude of displacement
+    posmaxmag.x=0; posmaxmag.y=0; posmaxmag.z=0;
     vector<Ivector3d> posmin(N); // coordinate of minimum displacement
     vector<Ivector3d> posmax(N); // coordinate of maximum displacement
 

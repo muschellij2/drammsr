@@ -11,6 +11,7 @@
 #define MyMAX(x,y)  ((x) > (y) ? (x) : (y))
 #define SSD  0
 #define CC   1
+#define CR   2
 
 int myround(float x)
 {
@@ -65,6 +66,7 @@ float featureCost(unsigned char ****TF, unsigned char ****SF, float ***confidenc
 	int featureIndex;
 	float energySquaredAtThisPoint = 0.0f;
 	float cc=0.0;
+	float cr=0.0;
 	float totalEnergy = 0.0f;
 	float feature;
 
@@ -111,9 +113,9 @@ float featureCost(unsigned char ****TF, unsigned char ****SF, float ***confidenc
 	
 	
 	
-	int judgement=0;
-	if (x_src<0 || x_src>(imageSize.x-1) || y_src<0 || y_src>(imageSize.y-1) || z_src<0 || z_src>(imageSize.z-1))
-		judgement=1;
+	//int judgement=0;
+	//if (x_src<0 || x_src>(imageSize.x-1) || y_src<0 || y_src>(imageSize.y-1) || z_src<0 || z_src>(imageSize.z-1))
+		//judgement=1;
 	
 		
 	if (SimilarityMeasure==SSD)
@@ -193,18 +195,103 @@ float featureCost(unsigned char ****TF, unsigned char ****SF, float ***confidenc
 	varA  = sumAsq-(float)numFeatures*aveA*aveA;
 	varB  = sumBsq-(float)numFeatures*aveB*aveB;
    
-    if (varA==0 && varB==0)
+        if (varA==0 && varB==0)
 		cc=1.0;
-	else if (varA==0 || varB==0)
+	else if (varA<=0 || varB<=0)
 		cc=0.0;
 	else
 		cc = fabsf(covAB/sqrt(varA*varB));
 		//cc = fabs(covAB/sqrt(varA*varB));
 
-	totalEnergy = -15000 * cc * confidenceMap[z_trg][x_trg][y_trg];   // confidence map involved
-	
+	if (isnan(cc))
+		totalEnergy = 0.0;
+	else
+		totalEnergy = -15000 * cc * confidenceMap[z_trg][x_trg][y_trg];   // confidence map involved
 	}
+
 	
+	if (SimilarityMeasure==CR)
+	{
+	float featureA, featureB;
+	int   numBins=32;
+	float mu[numBins];
+	float sigma[numBins];
+	float sumAsq[numBins];
+	int   Nmembers[numBins];
+	float overall_mu=0.0;
+	float overall_sigma=0.0;
+	int   binIndex;
+	int   featureIndex;
+	float overall_sumAsq=0.0;
+	float binWidth = 256.1 / (float)numBins;
+	float sum_across_bins = 0.0;
+
+	// initialization
+	for (binIndex=0; binIndex<numBins; binIndex++)
+           {
+            mu[binIndex]=0.0;
+            sigma[binIndex]=0.0;
+            sumAsq[binIndex]=0.0;
+            Nmembers[binIndex]=0;
+           }
+
+
+    	//
+    	for (featureIndex=0; featureIndex<numFeatures; featureIndex++)
+           {
+		featureA=(float)SF[featureIndex][zCeil][xCeil][yCeil]   * w1 +
+                                        SF[featureIndex][zFloor][xCeil][yCeil]  * w2 +
+                                        SF[featureIndex][zCeil][xCeil][yFloor]  * w3 +
+                                        SF[featureIndex][zFloor][xCeil][yFloor] * w4 +
+                                        SF[featureIndex][zCeil][xFloor][yCeil]  * w5 +
+                                        SF[featureIndex][zFloor][xFloor][yCeil] * w6 +
+                                        SF[featureIndex][zCeil][xFloor][yFloor] * w7 +
+                                        SF[featureIndex][zFloor][xFloor][yFloor]* w8 ;
+                featureB=(float)TF[featureIndex][z_trg][x_trg][y_trg];
+
+
+
+                overall_mu += featureA;
+                overall_sumAsq += featureA * featureA;
+
+                binIndex = (int)floor( featureB/binWidth );  // histogram bin determined by B
+                mu[binIndex] += featureA;
+                sumAsq[binIndex] += featureA * featureA;
+                Nmembers[binIndex] += 1 ;
+//if (x_trg==12 & y_trg==12 & z_trg==7 )
+//printf("x,y,z,fI=%d,%d,%d,%d, featureB=%f, binIndex=%d\n", x_trg, y_trg, z_trg, featureIndex, featureB, binIndex);
+            }
+
+
+	//
+	overall_mu /= (float)numFeatures;
+	overall_sigma = overall_sumAsq/(float)numFeatures - overall_mu*overall_mu;
+	for (binIndex=0; binIndex<numBins; binIndex++)
+        	{
+                if ( Nmembers[binIndex] > 0 )
+                        {
+                        mu[binIndex] /= (float)Nmembers[binIndex];
+                        sigma[binIndex] = sumAsq[binIndex]/(float)Nmembers[binIndex] - mu[binIndex]*mu[binIndex];
+                        sum_across_bins += (float)Nmembers[binIndex]*sigma[binIndex];
+//if (x_trg==12 & y_trg==12 & z_trg==7 )
+			//printf("bin index=%d, mu_thisbin=%f, Nmembers_thisbin=%d, sumAsq_thisbin=%f, sigma_thisbin=%f\n", binIndex, mu[binIndex], Nmembers[binIndex], sumAsq[binIndex], sigma[binIndex]);
+                        }
+        	}
+//if (x_trg==12 & y_trg==12 & z_trg==7 )
+	//printf("overall_mu=%f, overall_sigma=%f, sum_across_bins=%f, numFeatures=%d\n\n\n", overall_mu, overall_sigma, sum_across_bins, numFeatures);
+	if (overall_sigma > 0 )
+		cr = 1.0 - sum_across_bins/( (float)numFeatures*overall_sigma );
+	else
+		cr=0.0;
+	
+
+	if (isnan(cr))
+		totalEnergy=0.0;
+	else
+	    	totalEnergy = -30000 * cr * confidenceMap[z_trg][x_trg][y_trg];   // confidence map involved
+	}
+
+
 	return totalEnergy;
 }
 

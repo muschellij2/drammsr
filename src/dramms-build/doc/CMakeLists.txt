@@ -120,11 +120,11 @@ if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/index.rst")
         "${CMAKE_CURRENT_SOURCE_DIR}/DRAMMS_Software_Manual.pdf"
   )
 
-  basis_add_dependencies (softwaremanual_pdf_update  softwaremanual_pdf)
-  basis_add_dependencies (softwaremanual_html        softwaremanual_pdf_update)
-  basis_add_dependencies (softwaremanual_dirhtml     softwaremanual_pdf_update)
+  #basis_add_dependencies (softwaremanual_pdf_update  softwaremanual_pdf)
+  #basis_add_dependencies (softwaremanual_html        softwaremanual_pdf_update)
+  #basis_add_dependencies (softwaremanual_dirhtml     softwaremanual_pdf_update)
 
-  basis_add_dependencies  (site         softwaremanual_html)
+  basis_add_dependencies  (site         softwaremanual)
   basis_add_dependencies  (site_dirhtml softwaremanual_dirhtml)
   basis_add_dependencies  (manual       softwaremanual_pdf_update)
 
@@ -142,10 +142,18 @@ else ()
       BUILDER       html dirhtml pdf man
       MAN_SECTION   7
       HTML_THEME    ${PROJECT_PACKAGE_VENDOR_L}
-      RELLINKS      download installation manual publications people
+      RELLINKS      bout download installation manual tutorials faq publications people
       HTML_SIDEBARS searchbox globaltoc
       LATEX_TITLE   "${PROJECT_NAME} Web Site"
       OUTPUT_NAME   "${SITE_OUTPUT_NAME}"
+      SIDEBARWIDTH     280
+    HTML_STYLE       dramms.css
+    HTML_LOGO        logo.png
+    HTML_DESTINATION "${INSTALL_DOC_DIR}/html"
+    LATEX_TITLE      "${PROJECT_NAME} Software Manual"
+    OUTPUT_NAME      "${MANUAL_OUTPUT_NAME}"
+    AUTHORS          "Yangming Ou" "Andreas Schuh"
+
     )
   endif ()
 

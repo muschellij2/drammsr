@@ -14,10 +14,13 @@
 # dependency can be set here if the basis_use_package() command was enable
 # to import the required configuration of a particular external package.
 #
-# Copyright (c) 2011--2014 University of Pennsylvania. All rights reserved.<br />
+# Copyright (c) 2011--2013 University of Pennsylvania. All rights reserved.<br />
+# Copyright (c) 2014--2016 Massachusetts General Hospital, Harvard Medical School. All rights reserved. <br />
+# Copyright (c) 2016--     Boston Childrens Hospital, Harvard Medical School. All rights reserved. <br />
+#
 # See http://www.cbica.upenn.edu/sbia/software/license.html or COPYING file.
 #
-# Contact: SBIA Group <sbia-software at uphs.upenn.edu>
+# Contact: Yangming Ou <yangming.ou@mgh.harvard.edu>; SBIA Group <sbia-software at uphs.upenn.edu>
 #
 # @ingroup BasisSettings
 ##############################################################################

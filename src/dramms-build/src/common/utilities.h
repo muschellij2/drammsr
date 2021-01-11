@@ -2,10 +2,13 @@
  * @file  utilities.h
  * @brief Utility imaging functions.
  *
- * Copyright (c) 2011-2014 University of Pennsylvania. All rights reserved.
- * See https://www.rad.upenn.edu/sbia/software/license.html or COPYING file.
+ * Copyright (c) 2011-2013 University of Pennsylvania. All rights reserved.
+ * Copyright (c) 2014-2016 Massachusetts General Hospital, Harvard Medical Schoo. All rights reserved.
+ * Copyright (c) 2016-     Boston Childrens Hospital, Harvard Medical School. All rights reserved.
  *
- * Contact: SBIA Group <sbia-software at uphs.upenn.edu>
+ * See https://www.nitrc.org/projects/dramms and https://www.rad.upenn.edu/sbia/software/license.html or COPYING file.
+ *
+ * Contact: Yangming Ou <yangming.ou@mgh.harvard.edu>;  SBIA Group <sbia-software at uphs.upenn.edu>
  */
 
 #pragma once
@@ -901,8 +904,7 @@ Image* SubtractTransforms(const Image* D1, const Image* D2);
  * @param [in] image       Subject image.
  * @param [in] T           Linear transformation matrix.
  * @param [in] reference   Reference/template image.
- * @param [in] interpolate Whether to use linear interpolation.
- *                         If false, nearest neighbor interpolation is used.
+ * @param [in] interpolate which interpolation to use (0 NN, 1 linear, 2 sinc)
  *
  * @returns Transformed subject image in the space of the template image or
  *          NULL if memory allocation failed.
@@ -910,7 +912,7 @@ Image* SubtractTransforms(const Image* D1, const Image* D2);
 Image* ApplyTransform(const Image*            image,
                       const Image::Transform& T,
                       const Image*            reference,
-                      bool                    interpolate = true);
+                      int                     interpolate = 1);
 
 /**
  * @brief Apply deformation field on scalar image.
@@ -920,15 +922,14 @@ Image* ApplyTransform(const Image*            image,
  *                         image to the space of the template image.
  *                         Note that the parameters of the template space
  *                         are stored in the header of the deformation field.
- * @param [in] interpolate Whether to use linear interpolation.
- *                         If false, nearest neighbor interpolation is used.
+ * @param [in] interpolate Which interpolation to use (0-NN, 1-Linear, 2-Sinc).
  *
  * @returns Warped subject image in the space of the template image or
  *          NULL if memory allocation failed.
  */
 Image* ApplyTransform(const Image* image,
                       const Image* deffield,
-                      bool         interpolate = true);
+                      int          interpolate = 1);
 
 /**
  * @brief Convert a 2D deformation field to a 3D deformation field.

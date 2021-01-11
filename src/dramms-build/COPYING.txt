@@ -1,12 +1,13 @@
 
-  Section of Biomedical Image Analysis
-  Department of Radiology
-  University of Pennsylvania
-  3600 Market Street, Suite 380
-  Philadelphia, PA 19104
 
-  Web:   http://www.cbica.upenn.edu/sbia/
-  Email: sbia-software at uphs.upenn.edu
+  Web:   https://www.nitrc.org/projects/dramms/
+         http://www.cbica.upenn.edu/sbia/
+  Email: yangming.ou@mgh.harvard.edu
+         sbia-software at uphs.upenn.edu
+
+below is license between 2011-2014.
+2014-2016, Yangming Ou made modifications and updates while working at Massachusetts General Hospital, Harvard Medical School.
+2016-, Yangming Ou made modifications and updates while workiing at Boston Childrens Hospital, Harvard Medical School.
 
 
 SBIA Contribution and Software License Agreement ("Agreement")

@@ -4,10 +4,13 @@
 # @file  dramms.sh
 # @brief Deformable Registration via Attribute Matching and Mutual-Saliency weighting
 #
-# Copyright (c) 2011-2014 University of Pennsylvania. All rights reserved.
+# Copyright (c) 2011-2013 University of Pennsylvania. All rights reserved.
+#               2014-2016 Massachusetts General Hospital, Harvard Medical School.
+#		2016-     Boston Childrens Hospital, Harvard Medical School.                                   
 # See http://www.rad.upenn.edu/sbia/software/license.html or COPYING file.
 #
-# Contact: SBIA Group <sbia-software at uphs.upenn.edu>
+# Contact: Yangming Ou <yangming.ou@mgh.harvard.edu>
+#          SBIA Group <sbia-software at uphs.upenn.edu>
 ##############################################################################
 
 . ${BASIS_BASH_UTILITIES} || { echo "Failed to source BASIS utilities!" 1>&2; exit 1; }
@@ -111,8 +114,9 @@ print_help_detail()
     echo "                          1 -- use but do not save mutual-saliency map; "
     echo "                          2 -- use and save mutual-saliency map as \${outimg_folder}/MutualSaliency-\${outputprefix}.nii.gz"
     echo "  -w   <int>              Similarity measure: "
-    echo "                          0 -- difference of attributes (default). Proper for mono-modal registrations."
-    echo "                          1 -- correlation coefficient of attributes. Use 1 for multi-modal registrations."
+    echo "                          0 -- SSD: sum of squared difference of attributes (default). Proper for mono-modal registrations."
+    echo "                          1 -- NCC: normalized correlation coefficient of attributes. This can be used for mono- and multi-modal registrations."
+    echo "                          2 -- CR: correlation ratio of attributes (32 bins). This can be used for mono- and multi-modal registrations"
     echo "  -M                      Force histogram matching"
     echo "                          (default: off -- the program will automatically decide whether to match histogram.)"
     echo ""
@@ -194,7 +198,7 @@ print_help_detail()
     echo "To Warp Another Image Immediately Following Deformation Calculation:"
     echo "  -W   <char>             Name of the warped image (will be in the target space)."
     echo "  -L   <char>             Input image (in the source space) to be warped, such as a label map or a functional image."
-    echo "  -r   <int>              Interpolation method when warping image: 0-neareast neighbor; 1-trilinear. (default: 1)"
+    echo "  -r   <int>              Interpolation method when warping image: 0-neareast neighbor; 1-trilinear; 2-sinc (one-side neigborhood size = 5voxels). (default: 1)"
     echo ""
     echo ""
     echo "Standard Options:"  
@@ -312,6 +316,55 @@ errormemoryshortage()
 }
 
 
+# ----------------------------------------------------------------------------
+# regularization for linear registration
+calculatepenalty()
+{
+        transform=$1
+        a11=`cat $transform | sed -n 1p | awk '{ print $1 }'`
+        a12=`cat $transform | sed -n 1p | awk '{ print $2 }'`
+        a13=`cat $transform | sed -n 1p | awk '{ print $3 }'`
+        a21=`cat $transform | sed -n 2p | awk '{ print $1 }'`
+        a22=`cat $transform | sed -n 2p | awk '{ print $2 }'`
+        a23=`cat $transform | sed -n 2p | awk '{ print $3 }'`
+        a31=`cat $transform | sed -n 3p | awk '{ print $1 }'`
+        a32=`cat $transform | sed -n 3p | awk '{ print $2 }'`
+        a33=`cat $transform | sed -n 3p | awk '{ print $3 }'`
+
+        # added on 5/16/2017, some version of flirt output a  matrix in scientific numbers, this added section is to convert them into floating numbers
+        a11=`printf '%5.5f' $a11 | tr -d -`
+        a12=`printf '%5.5f' $a12 | tr -d -`
+        a13=`printf '%5.5f' $a13 | tr -d -`
+        a21=`printf '%5.5f' $a21 | tr -d -`
+        a22=`printf '%5.5f' $a22 | tr -d -`
+        a23=`printf '%5.5f' $a23 | tr -d -`
+        a31=`printf '%5.5f' $a31 | tr -d -`
+        a32=`printf '%5.5f' $a32 | tr -d -`
+        a33=`printf '%5.5f' $a33 | tr -d -`
+
+        # sometimes an affine element may in the form of ??e-??, which means it is very close to 0
+        if [ -z "${a11##*e*}" ] ;then a11=0; fi
+        if [ -z "${a12##*e*}" ] ;then a12=0; fi
+        if [ -z "${a13##*e*}" ] ;then a13=0; fi
+        if [ -z "${a21##*e*}" ] ;then a21=0; fi
+        if [ -z "${a22##*e*}" ] ;then a22=0; fi
+        if [ -z "${a23##*e*}" ] ;then a23=0; fi
+        if [ -z "${a31##*e*}" ] ;then a31=0; fi
+        if [ -z "${a32##*e*}" ] ;then a32=0; fi
+        if [ -z "${a33##*e*}" ] ;then a33=0; fi
+
+        if [ `echo ${a11} '>' ${a12} | bc -l` == 1 ]; then a1=${a11}; else a1=${a12}; fi
+        if [ `echo ${a1}  '>' ${a13} | bc -l` == 1 ]; then a1=${a1};  else a1=${a13}; fi
+        if [ `echo ${a21} '>' ${a22} | bc -l` == 1 ]; then a2=${a21}; else a2=${a22}; fi
+        if [ `echo ${a2}  '>' ${a23} | bc -l` == 1 ]; then a2=${a2};  else a2=${a23}; fi
+        if [ `echo ${a31} '>' ${a32} | bc -l` == 1 ]; then a3=${a31}; else a3=${a32}; fi
+        if [ `echo ${a3}  '>' ${a33} | bc -l` == 1 ]; then a3=${a3};  else a3=${a33}; fi
+
+        penalty=`echo "(1 - ${a1})*(1 - ${a2})*(1 - ${a3})" | bc -l`
+
+        echo ${penalty} | tr -d -
+}
+
 
 ############################################
 #
@@ -360,7 +413,7 @@ foregroundThre=0 #12                 # after intensities have been normalized in
 fastApproximationOrNot=0
 additionOrComposition=0
 matchHistogramFlag=0
-similarityMeasure=0               # 0: SSD, 1: CC
+similarityMeasure=0               # 0: SSD, 1: NCC, 2: CR
 
 # ----------------------------------------------------------------------------
 # optional arguments for user-specific intermediate directory
@@ -468,7 +521,7 @@ while [[ $# -gt 0 ]]; do
         # -------------------------------------------
         # optional arguments for software information
         -v|--verbose) (( verbose++ )); nshift=1;;
-        -V|--version) print_version 'dramms' --copyright '2011--2014 University of Pennsylvania'; exit 0;;
+        -V|--version) print_version 'dramms' --copyright '2011--2013 UPenn; 2014--2016 MGH, HMS; 2016-- BCH, HMS.'; exit 0;;
         -h|--help) print_help_detail; exit 0;;
         *)
             echo "Invalid option $1!" 1>&2
@@ -503,17 +556,35 @@ if [ $RAVENS != 'NULL' ]; then
     inputImgB=${bridgeVal}
 fi
 
+function readlink2 {
+    xout=`readlink -f ${inputImgA}`
+    if [ "$?" != "0" ]; then
+        xout=`greadlink -f ${inputImgA}`;
+    fi
+    echo ${xout}
+}
+
+inputImgA=`readlink2 ${inputImgA} 2> /dev/null`;
 inputImgA_basename=`basename ${inputImgA}`
 inputImgA_path=`realpath ${inputImgA}`
 inputImgA_path=`dirname ${inputImgA_path}`
 inputImgA_fullname=${inputImgA_path}/${inputImgA_basename}
 inputImgA_prefix=`prefix ${inputImgA_basename}`
+if [ ! -f ${inputImgA} ]; then
+	echo -e "\nError: input image ${inputImgA} does not exist. Please double check. Program exits.\n"
+	exit 1
+fi
 
+inputImgB=`readlink2 ${inputImgB} 2> /dev/null`
 inputImgB_basename=`basename ${inputImgB}`
 inputImgB_path=`realpath ${inputImgB}`
 inputImgB_path=`dirname ${inputImgB_path}`
 inputImgB_fullname=${inputImgB_path}/${inputImgB_basename}
 inputImgB_prefix=`prefix ${inputImgB_basename}`
+if [ ! -f ${inputImgB} ]; then
+	echo -e "\nError: input image ${inputImgB} does not exist. Please double check. Program exits.\n"
+	exit 1
+fi
 
 ############################################
 #
@@ -647,11 +718,15 @@ if [ $inputmaskt != 'NULL' ]; then
         echo
     fi
 
+    inputmaskt=`readlink2 ${inputmaskt}`
     inputmaskt_basename=`basename ${inputmaskt}`
     inputmaskt_path=`realpath ${inputmaskt}`
     inputmaskt_path=`dirname ${inputmaskt_path}`
     inputmaskt_fullname=${inputmaskt_path}/${inputmaskt_basename}
-
+    if [ ! -f ${inputmaskt} ]; then
+	echo -e "\nError: input mask file ${inputmaskt} does not exist. Program exits.\n"
+	exit 1
+    fi
     inputmask=${inputmaskt}
     inputmask_fullname=${inputmaskt_fullname}
 fi
@@ -671,11 +746,15 @@ if [ $inputmasks != 'NULL' ]; then
         echo
     fi
 
+    inputmasks=`readlink2 ${inputmasks}`
     inputmasks_basename=`basename ${inputmasks}`
     inputmasks_path=`realpath ${inputmasks}`
     inputmasks_path=`dirname ${inputmasks_path}`
     inputmasks_fullname=${inputmasks_path}/${inputmasks_basename}
-
+    if [ ! -f ${inputmasks} ]; then
+	echo -e "\nError: input mask file ${inputmasks} does not exist. Program exits.\n"
+	exit 1
+    fi
     inputmask=${inputmasks}
 fi
 if [ ${inputmasks} != 'NULL' ]&&[ ${inputmaskt} != 'NULL' ]; then
@@ -718,10 +797,15 @@ if [ $initTransformation != 'NULL' ]; then
     # if an affine matrix
     if [ ${initAffineMatrix} != 'NULL' ]; then
 	    affineOrNot=0  # no need to re-do affine
+	    initAffineMatrix=`readlink2 ${initAffineMatrix}`
 	    initAffineMatrix_basename=`basename ${initAffineMatrix}`
 	    initAffineMatrix_path=`realpath ${initAffineMatrix}`
 	    initAffineMatrix_path=`dirname ${initAffineMatrix_path}`
 	    initAffineMatrix_fullname=${initAffineMatrix_path}/${initAffineMatrix_basename}
+	    if [ ! -f ${initAffineMatrix} ]; then
+		echo -e "\nError: input initial transformation ${initAffineMatrix} does not exist. Program exits.\n"
+		exit 1
+	    fi
     fi
 
 	    
@@ -745,17 +829,22 @@ if [ $initTransformation != 'NULL' ]; then
 	    # check 5-2.2
 	    NDim=${sysflag}
 	    NDispComponents=`execute --allow_fail -- TransformOperation ${initDeformation} |sed -n 1p |cut -d' ' -f6`
-	    if [ ${NDispComponents} != ${NDim} ]; then
+	    if [ ${NDim} == 3 ]&&[ ${NDispComponents} != ${NDim} ]; then
 		    echo 
 		    error "Please double check the initial deformation field (${initDeformation})! The displacement vector at each voxel should have ${NDim} components (moving in ${NDim}-D space). Right now there are ${NDispComponents} component(s) (according to variable 'dim5' in the header), which is incorrect."
 		    echo
     		    exit 1
 	    fi
 
+	    initDeformation=`readlink2 ${initDeformation}`
 	    initDeformation_basename=`basename ${initDeformation}`
 	    initDeformation_path=`realpath ${initDeformation}`
 	    initDeformation_path=`dirname ${initDeformation_path}`
 	    initDeformation_fullname=${initDeformation_path}/${initDeformation_basename}
+	    if [ ! -f ${initDeformation} ]; then
+		echo -e "\nError: input initial transformation file ${initDeformation} does not exist. Program exits.\n"
+		exit 1
+	    fi
     fi
 fi
 
@@ -807,10 +896,15 @@ if [ $RAVENS != 'NULL' ]; then
         fi
 
         # till now we are assured that the label map has been input corrected (exist, in byte datatype and in subject space), we can go ahead to calculate RAVENS maps
+	LabelMap=`readlink2 ${LabelMap}`
         LabelMap_basename=`basename ${LabelMap}`
         LabelMap_path=`realpath ${LabelMap}`
         LabelMap_path=`dirname ${LabelMap_path}`
         LabelMap_fullname=${LabelMap_path}/${LabelMap_basename}
+	if [ ! -f ${LabelMap} ]; then
+		echo -e "\nError: input label map ${LabelMap} does not exist. Program exits.\n"
+		exit 1
+	fi
 
         if [ ${verbose} -gt 0 ]; then
             echo "Input subject image = ${inputImgB_basename}"
@@ -871,10 +965,15 @@ if [ ${WarpedImage} != 'NULL' ]; then
         echo
         exit 1
     else
+	LabelMap=`readlink2 ${LabelMap}`
         LabelMap_basename=`basename ${LabelMap}`
         LabelMap_path=`realpath ${LabelMap}`
         LabelMap_path=`dirname ${LabelMap_path}`
         LabelMap_fullname=${LabelMap_path}/${LabelMap_basename}
+	if [ ! -f ${LabelMap} ]; then
+		echo -e "\nError: input label map ${LabelMap} does not exist. Program exits.\n"
+		exit 1
+	fi
 
         # check if the label map is in the subject space
         execute --allow_fail -- CheckTwoImages ${LabelMap} ${inputImgA} > /dev/null
@@ -1073,13 +1172,13 @@ fi
 		cc=`execute CalculateImageSimilarity -C A_byte0.nii.gz B_byte0.nii.gz`
 		sysflag=`echo $?`
         [ ${sysflag} -eq 0 ] || { error "Failed to compute cross-correlation of A_byte0.nii.gz and B_byte0.nii.gz!"; exit 1; }
-        mi=`execute CalculateImageSimilarity -M A_byte0.nii.gz B_byte0.nii.gz`
+        mi=`execute CalculateImageSimilarity -N A_byte0.nii.gz B_byte0.nii.gz`
 		sysflag=`echo $?`
-        [ ${sysflag} -eq 0 ] || { error "Failed to compute unnormalized mutual information of A_byte0.nii.gz and B_byte0.nii.gz!"; exit 1; }
+        [ ${sysflag} -eq 0 ] || { error "Failed to compute normalized mutual information of A_byte0.nii.gz and B_byte0.nii.gz!"; exit 1; }
 
         cc=`echo -e "${cc}" | grep CC              | cut -d'=' -f2`
-        cc=`echo ${cc} | awk '{ print ($1 >= 0) ? $1 : 0 - $1}'` # we shall only care about the absolute value of cc
-        mi=`echo -e "${mi}" | grep MI_unnormalized | cut -d'=' -f2`
+        cc=`echo ${cc} | awk '{ print $1 }' | tr -d - ` # we shall only care about the absolute value of cc
+        mi=`echo -e "${mi}" | grep MI_normalized | cut -d'=' -f2`
 
         mi_cc0=`echo "${cc}*${mi}" | bc -l`
 		sysflag=`echo $?`
@@ -1092,13 +1191,13 @@ fi
 		cc=`execute CalculateImageSimilarity -C A_byte.nii.gz B_byte.nii.gz`
 		sysflag=`echo $?`
         [ ${sysflag} -eq 0 ] || { error "Failed to compute cross-correlation of A_byte.nii.gz and B_byte.nii.gz!"; exit 1; }
-        mi=`execute CalculateImageSimilarity -M A_byte.nii.gz B_byte.nii.gz`
+        mi=`execute CalculateImageSimilarity -N A_byte.nii.gz B_byte.nii.gz`
 		sysflag=`echo $?`
-        [ ${sysflag} -eq 0 ] || { error "Failed to compute unnormalized mutual information of A_byte.nii.gz and B_byte.nii.gz!"; exit 1; }
+        [ ${sysflag} -eq 0 ] || { error "Failed to compute normalized mutual information of A_byte.nii.gz and B_byte.nii.gz!"; exit 1; }
 
         cc=`echo -e "${cc}" | grep CC              | cut -d'=' -f2`
-        cc=`echo ${cc} | awk '{ print ($1 >= 0) ? $1 : 0 - $1}'` # we shall only care about the absolute value of cc
-        mi=`echo -e "${mi}" | grep MI_unnormalized | cut -d'=' -f2`
+        cc=`echo ${cc} | awk '{ print $1 }' | tr -d - ` # we shall only care about the absolute value of cc
+        mi=`echo -e "${mi}" | grep MI_normalized | cut -d'=' -f2`
 
         mi_cc=`echo "${cc}*${mi}" | bc -l`
 		sysflag=`echo $?`
@@ -1175,6 +1274,26 @@ fi
 xzratio=`echo "${xSize}/${zSize}" | bc -l`
 yzratio=`echo "${ySize}/${zSize}" | bc -l`
 		
+
+# added 09/04/2016, also get dimension and image size of source image, to detemrine wether to run flirt registrations using 2D_nosearch
+source_image_info=`execute --allow_fail -- CheckTwoImages ${inputImgA_fullname} ${inputImgA_fullname}`
+source_image_size=`echo ${source_image_info} | grep 'Image size' | sed 's/Image size: (//;s/)//'`
+source_xSize=`echo ${source_image_size} | cut -d, -f 1| tr -d ' '`
+source_ySize=`echo ${source_image_size} | cut -d, -f 2| tr -d ' '`
+source_zSize=`echo ${source_image_size} | cut -d, -f 3 |cut -d' ' -f2| tr -d ' '`
+
+# check if ${source_xSize}, ${source_ySize} and ${source_zSize} are purely numerical, othrewise quit and report error
+source_xSize_numerical=`echo ${source_xSize} | grep "^-\?[0-9]*$"`
+source_ySize_numerical=`echo ${source_ySize} | grep "^-\?[0-9]*$"`
+source_zSize_numerical=`echo ${source_zSize} | grep "^-\?[0-9]*$"`
+if [ "${source_xSize}" != "${source_xSize_numerical}" ] || [ "${source_ySize}" != "${source_ySize_numerical}" ] || [ "${source_zSize}" != "${source_zSize_numerical}" ]; then
+        echo
+        error "The image size (${source_xSize}, ${source_ySize}, ${source_zSize}) is non-numerical. Program quits here. Please double check input image headers."
+        exit 1
+fi
+source_xzratio=`echo "${source_xSize}/${source_zSize}" | bc -l`
+source_yzratio=`echo "${source_ySize}/${source_zSize}" | bc -l`
+
 		
 # ----------------------------------------------------------------------------
 chosencc=1 # initialize cc (correlation coefficient between two images)
@@ -1215,83 +1334,140 @@ else  # run affine/rigid registration within dramms
     MatA2BAffine=A2B_affine.mat
 
 	# calculate the affine transformation matrix from preprocessed byte images.
-	simset="normmi corratio"
+	simset="normmi180 corratio180"
 	trialind=1
-	max_mi_cc=0
-    while [ ${trialind} -le 2 ]; do
+	Tried2Dnosearch=0
+	max_mi_cc_inter=0
+	max_mi_cc_full=0
+    while [ ${trialind} -le 3 ]; do
     	if [ ${trialind} == 1 ]; then
-    		[ ${verbose} -gt 0 ] && echo "Try using normmi as similarity metric for affine registration, search range [-180, 180]"
-    		run ${FLIRTCMD} -in A_byte.nii.gz -ref B_byte.nii.gz -out ${intermediateDIR}/A2B_affine_normmi.nii.gz -omat ${intermediateDIR}/A2B_affine_normmi.mat -cost normmi -searchcost normmi -searchrx -180 180 -searchry -180 180 -searchrz -180 180 -dof ${dof} -datatype char &
-    		[ ${verbose} -gt 0 ] && echo "Try using corratio as similarity metric for affine registration, search range [-180, 180]"
-    		run ${FLIRTCMD} -in A_byte.nii.gz -ref B_byte.nii.gz -out ${intermediateDIR}/A2B_affine_corratio.nii.gz -omat ${intermediateDIR}/A2B_affine_corratio.mat -cost corratio -searchcost corratio -searchrx -180 180 -searchry -180 180 -searchrz -180 180 -dof ${dof} -datatype char &
-	else	
-		run rm ${intermediateDIR}/A2B_affine_normmi.nii.gz ${intermediateDIR}/A2B_affine_normmi.mat
-		run rm ${intermediateDIR}/A2B_affine_corratio.nii.gz ${intermediateDIR}/A2B_affine_corratio.mat
-		[ ${verbose} -gt 0 ] && echo "Try using normmi as similarity metric for affine registration, search range [-45, 45]"
-    		run ${FLIRTCMD} -in A_byte.nii.gz -ref B_byte.nii.gz -out ${intermediateDIR}/A2B_affine_normmi.nii.gz -omat ${intermediateDIR}/A2B_affine_normmi.mat -cost normmi -searchcost normmi -searchrx -45 45 -searchry -45 45 -searchrz -45 45 -dof ${dof} -datatype char &
-    		[ ${verbose} -gt 0 ] && echo "Try using corratio as similarity metric for affine registration, search range [-45, 45]"
-    		run ${FLIRTCMD} -in A_byte.nii.gz -ref B_byte.nii.gz -out ${intermediateDIR}/A2B_affine_corratio.nii.gz -omat ${intermediateDIR}/A2B_affine_corratio.mat -cost corratio -searchcost corratio -searchrx -45 45 -searchry -45 45 -searchrz -45 45 -dof ${dof} -datatype char &
+		if [ ! -f ${intermediateDIR}/A2B_affine_normmi180.nii.gz ]; then 
+			[ ${verbose} -gt 0 ] && echo -e "\nTry using normmi as similarity metric for affine registration, search range [-180, 180]\n"
+	    		run ${FLIRTCMD} -in A_byte.nii.gz -ref B_byte.nii.gz -out ${intermediateDIR}/A2B_affine_normmi180.nii.gz -omat ${intermediateDIR}/A2B_affine_normmi180.mat -cost normmi -searchcost normmi -searchrx -180 180 -searchry -180 180 -searchrz -180 180 -dof ${dof} -datatype char &
+		fi
+		if [ ! -f ${intermediateDIR}/A2B_affine_corratio180.nii.gz ]; then
+	    		[ ${verbose} -gt 0 ] && echo -e "\nTry using corratio as similarity metric for affine registration, search range [-180, 180]\n"
+    			run ${FLIRTCMD} -in A_byte.nii.gz -ref B_byte.nii.gz -out ${intermediateDIR}/A2B_affine_corratio180.nii.gz -omat ${intermediateDIR}/A2B_affine_corratio180.mat -cost corratio -searchcost corratio -searchrx -180 180 -searchry -180 180 -searchrz -180 180 -dof ${dof} -datatype char &
+		fi
 	fi
-	if [ `echo ${xzratio} '>=' 5 | bc -l` -eq 1 ]&&[ `echo ${yzratio} '>=' 5 | bc -l` -eq 1 ]; then  # in case of large z-thickness, also try 2D_nosearch affine registration.
-		simset="normmi corratio normmi_2D_nosearch corratio_2D_nosearch"
+	if ([ ${affineOrNot} -lt 3 ]&&[ ${trialind} == 2 ])||([ ${affineOrNot} -gt 2 ]&&[ ${trialind} == 1 ]); then	# if affine, do 45 search only in the second round; if rigid, do 45 search in the first round
+		simset="${simset} normmi45 corratio45"
+		if [ ! -f ${intermediateDIR}/A2B_affine_normmi45.nii.gz ]; then
+			[ ${verbose} -gt 0 ] && echo -e "\nTry using normmi as similarity metric for affine registration, search range [-45, 45]\n"
+    			run ${FLIRTCMD} -in A_byte.nii.gz -ref B_byte.nii.gz -out ${intermediateDIR}/A2B_affine_normmi45.nii.gz -omat ${intermediateDIR}/A2B_affine_normmi45.mat -cost normmi -searchcost normmi -searchrx -45 45 -searchry -45 45 -searchrz -45 45 -coarsesearch 15 -finesearch 5 -dof ${dof} -datatype char &
+		fi
+		if [ ! -f ${intermediateDIR}/A2B_affine_corratio45.nii.gz ]; then
+	    		[ ${verbose} -gt 0 ] && echo -e "\nTry using corratio as similarity metric for affine registration, search range [-45, 45]\n"
+    			run ${FLIRTCMD} -in A_byte.nii.gz -ref B_byte.nii.gz -out ${intermediateDIR}/A2B_affine_corratio45.nii.gz -omat ${intermediateDIR}/A2B_affine_corratio45.mat -cost corratio -searchcost corratio -searchrx -45 45 -searchry -45 45 -searchrz -45 45 -coarsesearch 15 -finesearch 5 -dof ${dof} -datatype char &
+		fi
+	fi
+	if (([ `echo ${xzratio} '>=' 4 | bc -l` -eq 1 ]||[ `echo ${yzratio} '>=' 4 | bc -l` -eq 1 ]||[ `echo ${source_xzratio} '>=' 4 | bc -l` -eq 1 ]||[ `echo ${source_yzratio} '>=' 4 | bc -l` -eq 1 ])&&[ "${trialind}" == 1 ])||([ "${trialind}" == 3 ]&&[ "${Tried2Dnosearch}" == 0 ]); then  # in case of large z-thickness, also try 2D_nosearch affine registration; or, in case the first 2 trials fail, try 2D_nosearch in the third trial
+		simset="${simset} normmi_2D_nosearch corratio_2D_nosearch"
+		Tried2Dnosearch=1
 		if [ ! -f ${intermediateDIR}/A2B_affine_normmi_2D_nosearch.nii.gz ]; then
-			[ ${verbose} -gt 0 ] && echo "Try using normmi as similarity metric, -nosearch -2D, for affine registration, default search range [-90, 90]"
+			[ ${verbose} -gt 0 ] && echo -e "\nTry using normmi as similarity metric, -nosearch -2D, for affine registration, default search range [-90, 90]\n"
 			run ${FLIRTCMD} -in A_byte.nii.gz -ref B_byte.nii.gz -out ${intermediateDIR}/A2B_affine_normmi_2D_nosearch.nii.gz -omat ${intermediateDIR}/A2B_affine_normmi_2D_nosearch.mat -cost normmi -searchcost normmi -2D -nosearch -datatype char &
 		fi
 		if [ ! -f ${intermediateDIR}/A2B_affine_corratio_2D_nosearch.nii.gz ]; then
-			[ ${verbose} -gt 0 ] && echo "Try using corratio as similarity metric, -nosearch -2D, for affine registration, default search range [-90, 90]"
+			[ ${verbose} -gt 0 ] && echo -e "\nTry using corratio as similarity metric, -nosearch -2D, for affine registration, default search range [-90, 90]\n"
 			run ${FLIRTCMD} -in A_byte.nii.gz -ref B_byte.nii.gz -out ${intermediateDIR}/A2B_affine_corratio_2D_nosearch.nii.gz -omat ${intermediateDIR}/A2B_affine_corratio_2D_nosearch.mat -cost corratio -searchcost corratio -2D -nosearch -datatype char &
 		fi
 	fi
     	# wait for background jobs to finish
     	wait
+        # added on 5/13/2015, we noticed that the out of FOV interpolation is not strictly 0 using flirt registration when register a small FOV (e.g., partial brain) to a big FOV (e.g., full brain). therefore, we use dramms-warp to transform the image again to get out of FOV regions to 0 (what they should be).
+        for xfm in *.mat; do
+                execute ApplyTransform A_byte.nii.gz ${xfm} ${xfm%.mat}.nii.gz -t B_byte.nii.gz
+        done
     	# when all above 4 affine tries have finished, pick the best one with highest mi * abs(cc)
+	# modified on 09/04/2016, not only look at cc and mi in the intersection of images (v1.4.3, in preparation some images have big FOV mismatch), but also look at cc and mi in the whole image, to avoid the extreme case that when a registered image is shrunk to a point or small patch, the cc and mi in the intersection regions are very high but the results are undesirable.
     	[ ${verbose} -gt 0 ] && echo "Selecting best affine registration results"
     	for sim in ${simset}; do
 		tmpaffineimg="${intermediateDIR}/A2B_affine_${sim}.nii.gz"
 		if [ -f ${tmpaffineimg} ]; then # modified on 11/8/2014, based on Jimit's report of one failed flirt affine registration. Now we allow flirt to fail in very very rare cases, and proceed with the images that flirt successfully generated
-	        	cc=`execute CalculateImageSimilarity -C ${tmpaffineimg} B_byte.nii.gz`	
+	        	cc_inter=`execute CalculateImageSimilarity -C -I ${tmpaffineimg} B_byte.nii.gz`	
+			cc_full=`execute CalculateImageSimilarity -C ${tmpaffineimg} B_byte.nii.gz`
 			sysflag=`echo $?`
 	        	[ ${sysflag} -eq 0 ] || { error "Failed to compute cross-correlation of A2B_affine_${sim}.nii.gz and B_byte.nii.gz!"; exit 1; }
-        		mi=`execute CalculateImageSimilarity -M ${tmpaffineimg} B_byte.nii.gz`
+                        if [ ${affineOrNot} -gt 2 ]; then
+                                mi_inter=`execute CalculateImageSimilarity -M -I ${tmpaffineimg} B_byte.nii.gz`
+				mi_full=`execute CalculateImageSimilarity -M ${tmpaffineimg} B_byte.nii.gz`
+                        else
+                                mi_inter=`execute CalculateImageSimilarity -N -I ${tmpaffineimg} B_byte.nii.gz`
+				mi_full=`execute CalculateImageSimilarity -N ${tmpaffineimg} B_byte.nii.gz`
+                        fi
 			sysflag=`echo $?`
-	        	[ ${sysflag} -eq 0 ] || { error "Failed to compute unnormalized mutual information of A2B_affine_${sim}.nii.gz and B_byte.nii.gz!"; exit 1; }
+	        	[ ${sysflag} -eq 0 ] || { error "Failed to compute normalized mutual information of A2B_affine_${sim}.nii.gz and B_byte.nii.gz!"; exit 1; }
 
-	        	cc=`echo -e "${cc}" | grep CC              | cut -d'=' -f2`
-        		cc=`echo ${cc} | awk '{ print ($1 >= 0) ? $1 : 0 - $1}'` # we shall only care about the absolute value of cc
-        		mi=`echo -e "${mi}" | grep MI_unnormalized | cut -d'=' -f2`
+	        	cc_inter=`echo -e "${cc_inter}" | grep CC | cut -d'=' -f2`
+        		cc_inter=`echo ${cc_inter} | awk '{ print $1 }' | tr -d - ` # we shall only care about the absolute value of cc
+        		mi_inter=`echo -e "${mi_inter}" | grep MI | cut -d'=' -f2 | awk '{ print $1 }' | tr -d -`
 
-	        	mi_cc=`echo "${cc}*${mi}" | bc -l`
+			cc_full=`echo -e "${cc_full}" | grep CC | cut -d'=' -f2`
+                        cc_full=`echo ${cc_full} | awk '{ print $1 }' | tr -d - ` # we shall only care about the absolute value of cc
+                        mi_full=`echo -e "${mi_full}" | grep MI | cut -d'=' -f2 | awk '{ print $1 }'| tr -d -`
+
+
+	        	mi_cc_inter=`echo "${cc_inter}*${mi_inter}" | bc -l`
+			mi_cc_full=`echo "${cc_full}*${mi_full}" | bc -l`
 			sysflag=`echo $?`
         		if [ ${sysflag} -ne 0 ]; then
             			error "Failed to compute product of cross-correlation and mutual information!" 1>&2
 	            		exit 1
         		fi
+                        FOVpenalty=`calculatepenalty ${intermediateDIR}/A2B_affine_${sim}.mat`
+                        mi_cc_inter=`echo "${mi_cc_inter} - 1.2*${FOVpenalty}" | bc -l`
+                        #sysflag=`echo $?`
+                        #[ ${sysflag} -ne 0 ] || { error "Failed to compute penalty into the similarity cost function!"; exit 1; }
 
         		if [ ${verbose} -gt 0 ]; then
             			echo
-            			echo "when sim=${sim}: mi=${mi}, cc=${cc}, mi*cc=${mi_cc}"
+            			echo "when sim=${sim}: mi_inter=${mi_inter}, cc_inter=${cc_inter}, mi_inter*cc_inter=${mi_cc_inter}; mi_full=${mi_full}, cc_full=${cc_full}, mi_full*cc_full=${mi_cc_full}"
 	        	fi
-        		mi_cc_vs_max_mi_cc=`echo ${mi_cc} '>' ${max_mi_cc} | bc -l`
-			sysflag=`echo $?`
-	        	if [ ${sysflag} -ne 0 ]; then
-        	    		error "Comparison of image similarity to currently maximum similarity failed!" 1>&2;
-            			exit 1;
-	        	fi
+		
+			# the following rule was used till 09/04/2016
+        		#mi_cc_vs_max_mi_cc_inter=`echo ${mi_cc_inter} '>' ${max_mi_cc_inter} | bc -l`
+			#sysflag=`echo $?`
+	        	#if [ ${sysflag} -ne 0 ]; then
+        	    	#	error "Comparison of image similarity to currently maximum similarity failed!" 1>&2;
+            		#	exit 1;
+	        	#fi
+			#
+        		#if [ "${mi_cc_vs_max_mi_cc_inter}" -eq 1 ]; then
+            		#	run cp ${tmpaffineimg} ${ImgA2BAffine}
+            		#	run cp ${tmpaffineimg%.nii.gz}.mat    ${MatA2BAffine}
+	            	#	max_mi_cc_inter=${mi_cc_inter}
+			#	chosencc=${cc_inter}
+        		#fi
 
-        		if [ "${mi_cc_vs_max_mi_cc}" -eq 1 ]; then
-            			run cp ${tmpaffineimg} ${ImgA2BAffine}
-            			run cp ${tmpaffineimg%.nii.gz}.mat    ${MatA2BAffine}
-	            		max_mi_cc=${mi_cc}
-				chosencc=${cc}
-        		fi
+			# new rule on 09/04/2016, look at both inter_FOV and full image similarities, prefer to look at inter_FOV, as long as full image similarity is not too low.
+			win_by_inter=0;
+			win_by_full=0;
+
+			if [ `echo "${mi_cc_inter} > ${max_mi_cc_inter}" |bc -l` == 1 ]&&[ `echo "${mi_cc_full} > 0.6 * ${max_mi_cc_full}" |bc -l` == 1 ]; then 
+				win_by_inter=1
+			fi
+			if [ `echo "${mi_cc_inter} > 0.6 * ${max_mi_cc_inter}" |bc -l` == 1 ]&&[ `echo "${mi_cc_full} > 2.5 * ${max_mi_cc_full}" |bc -l` == 1 ]; then
+                                win_by_full=1
+                        fi
+			if [ "${win_by_inter}" == 1 ]||[ "${win_by_full}" == 1 ]; then
+				run cp ${tmpaffineimg} ${ImgA2BAffine}
+                                run cp ${tmpaffineimg%.nii.gz}.mat    ${MatA2BAffine}
+                                max_mi_cc_inter=${mi_cc_inter}
+				max_mi_cc_full=${mi_cc_full}
+                                chosencc=$( (( `echo ${cc_inter} '<=' ${cc_full} |bc -l`)) && echo "${cc_inter}" || echo "${cc_full}" )
+			fi
 		fi
     	done
     	# check if affine registration results make sense. We have done mutualinfo and corratio with search range [-180,180], if the maximum cc*mi is still <0.1, we need to search again with a narrower search range [-45,45]
-    	if [ `echo ${max_mi_cc} '<' 0.1 | bc -l` -eq 1 ]; then
-		trialind=$(( ${trialind} + 1 ))
+    	if [ `echo ${max_mi_cc_full} '<' 0.1 | bc -l` -eq 1 ]||[ `echo ${max_mi_cc_inter} '<' 0.1 | bc -l` -eq 1 ]; then
+		if [ ${affineOrNot} -lt 3 ]; then # affine
+			trialind=$(( ${trialind} + 1 ))
+		elif [ ${affineOrNot} -gt 2 ]; then # rigid
+			trialind=$(( ${trialind} + 2 ))
+		fi
 	else
-		trialind=3;
+		trialind=4;
     	fi
     done
     # check if affine registration finishes successfully
@@ -1325,7 +1501,8 @@ fi
 
 if [ ${affineOrNot} == "2" ]||[ ${affineOrNot} == "4" ]; then # exit right after affine, no deformable needed
 	run cp ${MatA2BAffine} ${deformationFieldA2B_fullname%.mat}.mat
-	run ${FLIRTCMD} -in ${inputImgA_fullname} -ref ${inputImgB_fullname} -out ${outputImgA2B_fullname%.nii.gz}.nii.gz -init ${MatA2BAffine} -applyxfm
+	#run ${FLIRTCMD} -in ${inputImgA_fullname} -ref ${inputImgB_fullname} -out ${outputImgA2B_fullname%.nii.gz}.nii.gz -init ${MatA2BAffine} -applyxfm
+	run ApplyTransform ${inputImgA_fullname} ${MatA2BAffine} ${outputImgA2B_fullname%.nii.gz}.nii.gz -t ${inputImgB_fullname}
 	echo ""
 	echo "This user has specified to do affine or rigid registration only, and no deformable components involved (throught '-a 2' or '-a 4' option)."
 	echo "The output affinely/rigidly-registered image is ${outputImgA2B_fullname%.nii.gz}.nii.gz"
@@ -1476,8 +1653,8 @@ fi
 # image in level 1 (highest resolution)
 run cp -f ${intermediateDIR}/${ImgA2BAffine} A2B_affine_level1.nii.gz
 # determine which image B version to use (B_byte.nii.gz versus B_byte_nothresholding.nii.gz) --- choose a B version that is more similar with A2B_affine.nii.gz
-cc1=`execute CalculateImageSimilarity -C ${intermediateDIR}/${ImgA2BAffine} ${intermediateDIR}/B_byte.nii.gz |grep CC |awk '{ print ($3 >= 0) ? $3 : 0 - $3 }'`
-cc2=`execute CalculateImageSimilarity -C ${intermediateDIR}/${ImgA2BAffine} ${intermediateDIR}/B_byte_nothresholding.nii.gz |grep CC |awk '{ print ($3 >= 0) ? $3 : 0 - $3 }'`
+cc1=`execute CalculateImageSimilarity -C ${intermediateDIR}/${ImgA2BAffine} ${intermediateDIR}/B_byte.nii.gz |grep CC | awk '{ print $1 }' | tr -d -`
+cc2=`execute CalculateImageSimilarity -C ${intermediateDIR}/${ImgA2BAffine} ${intermediateDIR}/B_byte_nothresholding.nii.gz |grep CC | awk '{ print $1 }' | tr -d - `
 if [ "`echo ${cc1} '>' 0.8*${cc2} | bc -l`" -eq 1 ]; then
 	run cp -f ${intermediateDIR}/B_byte.nii.gz   B_level1.nii.gz
 else
@@ -1741,6 +1918,7 @@ if [ ${number_of_dimensions} == "2" ]; then
     args="${args} ${attributeDIR}/Gabor_"
     args="${args} A2B.nii.gz DField.nii.gz"
 
+    echo -e "\nDeform2D $args\n"
     run Deform2D $args
 else # -----------------------------------------------------------------------
     args="-b${distBetweenControlPointsX},${distBetweenControlPointsY},${distBetweenControlPointsZ} -p"
@@ -1764,6 +1942,7 @@ else # -----------------------------------------------------------------------
     args="${args} ${attributeDIR}/GaborUsed_"
     args="${args} A2B.nii.gz DField.nii.gz"
 
+    echo -e "\nDeform3D $args\n"
     run Deform3D $args
 fi
 flag_step6=0
@@ -1870,7 +2049,8 @@ fi
 ### At the end, prompt possible failure message for registration (results fail, not program fail)
 #
 ###############################
-if [ ${affineOrNot} != 0 ]&[ "`echo ${chosencc} '<' 0.5 |bc -l`" -eq 1 ]; then
+#if [ ${affineOrNot} != 0 ]&[ "`echo ${chosencc} '<' 0.5 |bc -l`" -eq 1 ]; then
+if [ ${affineOrNot} != 0 ]&[ "`echo ${chosencc} '<' 0.25 |bc -l`" -eq 1 ]; then
 	echo -e "\e[00;31m ------------Warning------------- \e[00m"
 	echo -e "\e[00;31m Registration results may be wrong (although dramms program finishes successfully). \e[00m"
 	echo -e "\e[00;31m This is usually the case when two input images are largely different in structures/contents, that even affine registration may fail. \e[00m"

@@ -2,10 +2,12 @@
  * @file  image.h
  * @brief Definition of image type and declaration of image functions.
  *
- * Copyright (c) 2011, 2012 University of Pennsylvania. All rights reserved.<br />
+ * Copyright (c) 2011-2013 University of Pennsylvania. All rights reserved.<br />
+ * Copyright (c) 2014-2016 Massachusetts General Hospital, Harvard Medical School. All rights reserved. <br />
+ * Copyright (c) 2016-     Boston Childrens Hospital, Harvard Medical School. All rights reserved. <br />
  * See http://www.rad.upenn.edu/sbia/software/license.html or COPYING file.
  *
- * Contact: SBIA Group <sbia-software at uphs.upenn.edu>
+ * Contact: Yangming Ou <yangming.ou@mgh.harvard.edu>; SBIA Group <sbia-software at uphs.upenn.edu>
  */
 
 #pragma once
@@ -649,6 +651,36 @@ public:
      * @returns Interpolated intensity value.
      */
     float value(float i, float j, float k, int n = 0) const;
+
+    /**
+     * @brief Get image intensity at sub-voxel position by sinc interpolation (window size 5 voxels in each side).
+     *
+     * This function interpolates the intensity using 2D sinc interpolation
+     * of the intensities in the slice of the given @p z coordinate.
+     *
+     * @param [in] i Continuous voxel index in first dimension.
+     * @param [in] j Continuous voxel index in second dimension.
+     * @param [in] k Voxel index in third dimension.
+     *               Set to zero if image is two-dimensional.
+     * @param [in] n Vector component. Set to zero if voxel data is scalar.
+     *
+     * @returns Interpolated intensity value.
+     */
+    float sincvalue(float i, float j, int k = 0, int n = 0) const;
+
+    /**
+      * @brief Get image intensity at sub-voxel position by sinc interpolation (window size 5 voxels in each side).
+      * 
+      * This function interpolates the intensity using 3D sinc interpolation.
+      *
+      * @param [in] i Continuous voxel index in first dimension.
+      * @param [in] j Continuous voxel index in second dimension.
+      * @param [in] k Continuous voxel index in third dimension.
+      * @param [in] n Vector component. Set to zero if voxel data is scalar.
+      *
+      * @returns Interpolated intensity value.
+      */
+    float sincvalue(float i, float j, float k, int n = 0) const;
 
     /**
      * @brief Get displacement vector at voxel position.

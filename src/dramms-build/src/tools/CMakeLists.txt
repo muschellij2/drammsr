@@ -12,14 +12,14 @@
 ## @brief Add auxiliary executable for internal use by dramms script only.
 macro (dramms_add_advanced_tool EXENAME)
   basis_add_executable(${EXENAME}.cxx LIBEXEC ${ARGN})
-  basis_target_link_libraries(${EXENAME} common)
+  basis_target_link_libraries(${EXENAME} common basis)
 endmacro ()
 
 # ----------------------------------------------------------------------------
 ## @brief Add auxiliary executable also for use by end users.
 macro (dramms_add_user_tool EXENAME NAME_SUFFIX)
   basis_add_executable(${EXENAME}.cxx ${ARGN})
-  basis_target_link_libraries(${EXENAME} common)
+  basis_target_link_libraries(${EXENAME} common basis)
   basis_set_target_properties (${EXENAME} PROPERTIES OUTPUT_NAME "dramms-${NAME_SUFFIX}")
 endmacro ()
 

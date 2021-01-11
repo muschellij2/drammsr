@@ -1,14 +1,15 @@
 
-  Section of Biomedical Image Analysis
-  Department of Radiology
-  University of Pennsylvania
-  3600 Market Street, Suite 380
-  Philadelphia, PA 19104
 
-  Web:   http://www.cbica.upenn.edu/sbia/
-  Email: sbia-software at uphs.upenn.edu
+  Web:   https://www.nitrc.org/projects/dramms
+         http://www.cbica.upenn.edu/sbia/
 
-  Copyright (c) 2011 -- 2014 University of Pennsylvania. All rights reserved.
+  Email: yangming.ou@mgh.harvard.edu
+         sbia-software at uphs.upenn.edu
+
+  Copyright (c) 2011 -- 2013 University of Pennsylvania. All rights reserved.
+  Copyright (c) 2014 -- 2016 Massachusetts General Hospital, Harvard Medical School. All rights reserved.
+  Copyright (c) 2016 --      Boston Childrens Hospital, Harvard Medical Schoo. All rights reserved.
+  See https://www.nitrc.org/projects/dramms.
   See http://www.cbica.upenn.edu/sbia/software/license.html or COPYING file.
 
 

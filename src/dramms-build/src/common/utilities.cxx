@@ -3,10 +3,12 @@
  * @brief Utility imaging functions.
  *
  * Copyright (c) 2011-2014 University of Pennsylvania. All rights reserved.<br />
- * Copyright (c) 2014 MGH, HMS. All rights reserved.<br />
- * See http://www.rad.upenn.edu/sbia/software/license.html or COPYING file.
+ * Copyright (c) 2014-2016 MGH, HMS. All rights reserved.<br />
+ * Copyright (c) 2016-     BCH, HMS. All rights reserved.<br />
  *
- * Contact: SBIA Group <sbia-software at uphs.upenn.edu>
+ * See https://www.nitrc.org/projects/dramms, or, http://www.rad.upenn.edu/sbia/software/license.html or COPYING file.
+ *
+ * Contact: Yangming Ou <yangming.ou@mgh.harvard.edu>; SBIA Group <sbia-software at uphs.upenn.edu>
  */
 
 #include <stack>
@@ -64,7 +66,7 @@ template <typename T>
 static void warp_intensity_image(T***         warpedimage,
                                  const Image* image,
                                  const Image* deffield,
-                                 bool         interpolate)
+                                 int          interpolate)
 {
     const int x_size_in = image->region.nx;
     const int y_size_in = image->region.ny;
@@ -93,9 +95,9 @@ static void warp_intensity_image(T***         warpedimage,
                 y = static_cast<float>(j) + v3[k][i][j].y;
                 z = static_cast<float>(k) + v3[k][i][j].z;
 
-                if (interpolate) {
+                if (interpolate==1) { // linear interpolation
                     warpedimage->set(i, j, k, image->value(x, y, z));
-                } else {
+                } else if (interpolate==0) { // nearest neighbor interpolation
                     ii = static_cast<int>(round(x));
                     jj = static_cast<int>(round(y));
                     kk = static_cast<int>(round(z));
@@ -107,7 +109,9 @@ static void warp_intensity_image(T***         warpedimage,
                     } else {
                         warpedimage->set(i, j, k, image->get(ii, jj, kk));
                     }
-                }
+                } else if (interpolate==2) { // sinc interpolation
+			warpedimage->set(i, j, k, image->sincvalue(x,y,z));
+		}
             }
         }
     }
@@ -2782,7 +2786,7 @@ Image* SubtractTransforms(const Image* D1, // A -> C
 }
 
 // ---------------------------------------------------------------------------
-Image* ApplyTransform(const Image* image, const Image::Transform& T, const Image* reference, bool interpolate)
+Image* ApplyTransform(const Image* image, const Image::Transform& T, const Image* reference, int interpolate)
 {
     // check input images
     if (image->hdr.dim[5] > 1) return NULL;
@@ -2859,15 +2863,18 @@ Image* ApplyTransform(const Image* image, const Image::Transform& T, const Image
                 x.z = static_cast<float>(k);
                 x = TransformPoint(M, x);
                 value = 0.0f;
-                if (interpolate) {
+		if (interpolate==1) { // linear interpolation
                     value = image->value(x.x, x.y, x.z);
-                } else if (x.x >= 0 && x.x <= (image->region.nx - 1) &&
+                } else if (interpolate==0 &&
+			   x.x >= 0 && x.x <= (image->region.nx - 1) &&
                            x.y >= 0 && x.y <= (image->region.ny - 1) &&
-                           x.z >= 0 && x.z <= (image->region.nz - 1)) {
+                           x.z >= 0 && x.z <= (image->region.nz - 1)) { // nearest neighborhood interpolation
                     value = image->get(min(image->region.nx-1, static_cast<int>(x.x + 0.5f)),
                                        min(image->region.ny-1, static_cast<int>(x.y + 0.5f)),
                                        min(image->region.nz-1, static_cast<int>(x.z + 0.5f)));
-                }
+                } else if (interpolate==2) { // sinc interpolation
+		    value = image->sincvalue(x.x, x.y, x.z);	
+		}		
                 output_image->set(i, j, k, value);
             }
         }
@@ -2876,7 +2883,7 @@ Image* ApplyTransform(const Image* image, const Image::Transform& T, const Image
 }
 
 // ---------------------------------------------------------------------------
-Image* ApplyTransform(const Image* image, const Image* deffield, bool interpolate)
+Image* ApplyTransform(const Image* image, const Image* deffield, int interpolate)
 {
     // check input images
     if (image->hdr.dim[5] > 1) {
@@ -2928,15 +2935,18 @@ Image* ApplyTransform(const Image* image, const Image* deffield, bool interpolat
                 y = static_cast<float>(j) + v[1];
                 z = static_cast<float>(k) + v[2];
                 value = 0.0f;
-                if (interpolate) {
+                if (interpolate==1) { // linear interpolation
                     value = image->value(x, y, z);
-                } else if (x >= 0 && x <= (x_size_in - 1) &&
+                } else if (interpolate==0 &&
+			   x >= 0 && x <= (x_size_in - 1) &&
                            y >= 0 && y <= (y_size_in - 1) &&
-                           z >= 0 && z <= (z_size_in - 1)) {
+                           z >= 0 && z <= (z_size_in - 1)) {  // nearest neighbor interpolation
                     value = image->get(min(x_size_in, static_cast<int>(x + 0.5f)),
                                        min(y_size_in, static_cast<int>(y + 0.5f)),
                                        min(z_size_in, static_cast<int>(z + 0.5f)));
-                }
+                } else if (interpolate==2) { // sinc interpolation
+		    value = image->sincvalue(x, y, z);
+		}
                 warpedimage->set(i, j, k, value);
             }
         }

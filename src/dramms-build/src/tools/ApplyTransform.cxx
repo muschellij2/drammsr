@@ -2,7 +2,9 @@
  * @file  ApplyTransform.cxx
  * @brief Apply affine or deformable transformation to scalar image.
  *
- * Copyright (c) 2011, 2012 University of Pennsylvania. All rights reserved.<br />
+ * Copyright (c) 2011-2013 University of Pennsylvania. All rights reserved.<br />
+ * Copyright (c) 2014-2016 Massachusetts General Hospital, Harvard Medical School. All rights reserved. <br />
+ * Copyright (c) 2016-     Boston Childrens Hospital, Harvard Medical School. All rights reserved. <br />
  * See http://www.rad.upenn.edu/sbia/software/license.html or COPYING file.
  *
  * Contact: SBIA Group <sbia-software at uphs.upenn.edu>
@@ -52,6 +54,8 @@ void print_help()
     cout << "                       used instead of the deformation field header if specified." << endl;
     cout << "  -n                   Use nearest neighbor interpolation." << endl;
     cout << "                       (default: linear interpolation)" << endl;
+    cout << "  -s                   Use sinc interpolation (neighorhood size 5 in each side)" << endl;
+    cout << "                       (default: linear interpolation)" << endl;
     cout << "  -v                   Increase verbosity of output messages." << endl;
     cout << "  -h                   Print help and exit." << endl;
     cout << endl;
@@ -74,7 +78,7 @@ int main (int argc,char *argv[])
 
     // default options
     const char* template_file = NULL;
-    bool        interpolate   = true;
+    int         interpolate   = 1;   // 0 for NN, 1 for linear, 2 for sinc.
     int         verbose       = 0;
 
     // show usage if no arguments were given
@@ -85,11 +89,15 @@ int main (int argc,char *argv[])
 
     // parse arguments
     int c = -1;
-    while ((c = getopt(argc, argv, "nvht:")) != -1) {
+    while ((c = getopt(argc, argv, "nsvht:")) != -1) {
         switch (c) {
             case 'n':
-                interpolate = false; // use nearest neighbor instead
+                interpolate = 0; // use nearest neighbor interpolation
                 break;
+
+	    case 's':
+		interpolate = 2; // use since interpolation
+		break;
 
             case 't':
                 template_file = optarg;

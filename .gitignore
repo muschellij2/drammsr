@@ -15,6 +15,11 @@
 .Rproj.user/
 
 src/dramms-1.4.3-source/*
+src/dramms-*-source/*
+src/*.zip
+
+inst/dramms/
 
 build.sh
 check.sh
+

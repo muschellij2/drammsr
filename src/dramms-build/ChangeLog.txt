@@ -1,15 +1,15 @@
 ..
-  Section of Biomedical Image Analysis
-  Department of Radiology
-  University of Pennsylvania
-  3600 Market Street, Suite 380
-  Philadelphia, PA 19104
   
-  Web:   https://www.cbica.upenn.edu/sbia/
-  Email: sbia-software at uphs.upenn.edu
+  Web:   https://www.nitrc.org/projects/dramms/
+         https://www.cbica.upenn.edu/sbia/
+  Email: yangming.ou@mgh.harvard.edu
+         sbia-software at uphs.upenn.edu
   
-  Copyright (c) 2011-2014 University of Pennsylvania. All rights reserved.
+  Copyright (c) 2011-2013 University of Pennsylvania. All rights reserved.
+                2014-2016 Massachusetts General Hospital. All rights reserved.
+		2016-     Boston Childrens Hospital. All rights reserved.
   See http://www.cbica.upenn.edu/sbia/software/license.html or COPYING file.
+  See https://www.nitrc.org/projects/dramms.
 
 
 .. This file is formatted using reStructuredText (reST) and included by doc/changelog.rst !
@@ -19,24 +19,46 @@ Changes
 =======
 
 
-.. _v1.5.0:
+.. _v1.6.0:
 
-Release 1.5.0 (TBA)
+Release 1.6.0 (TBA)
 -------------------
 
 - To enable probabilistic input for RAVENS calculation.
 - To extend DRAMMS to multi-channel image registration.
 - To provide tools for conversion of DRAMMS deformations to other common formats.
 
+.. _v1.5.1:
+
+Release 1.5.1 (Sept, 2018)
+------------------
+- Added Correlation Ratio as a new similarity metric on attributes.
+- Modified Normalized Correlation Coefficient as a similarity metric on attributes for multi-modal registration.
+- modified the calculatepenalty() function to be generally applicable to floating format, scientific format and hex format.
+
+.. _v1.4.4:
+
+Release 1.4.4 (Sept, 2016)
+--------------------------------
+- now can correctly analysis dynamicly linked files. Versions before 1.4.4 failed.
+- added sinc interpolation beyond the linear and nearest neighbor interpolations.
+- modified rules for running flirt-based linear registration. It was to be to run 2D_nosearch when the target image has thick slices, now to run 2D_nosearch also when the source image has thick slices.
+- modified the selection rules to select the optimal linear registration among multiple flirt results. Used to be looking at similarity only within the overlap of two images' FOV, now also look at the similarity in the full image. The new criterion: prefer high similarity in the intersection of FOVs as long as the similarity in the whole image is not too low.
+
 
 .. _v1.4.3:
 
-Release 1.4.3
+Release 1.4.3 (Nov, 2015)
 --------------------------------
 
+- Added pointers to the newly availble 4D-dramms (for longitudinal analysis) and pop-dramms (for unbiased atlas construction).
+- Updated the url of niftiCLib-2.0.0 from cbica location (which now has a problem installing in some linux systems) http://www.cbica.upenn.edu/sbia/software/distributions/nifticlib-2.0.0.tar.gz to http://pkgs.fedoraproject.org/repo/pkgs/nifticlib/nifticlib-2.0.0.tar.gz/425a711f8f92fb1e1f088cbc55bea53a/nifticlib-2.0.0.tar.gz.
+- Use BASIS 3.2.0 instead of 2.1.4. BASIS 3.2.0 adapts well with cmake 3.0 or above. I downloaded BASIS 3.2.0 from Andreas Schuh's github site (https://github.com/schuhschuh/cmake-basis/archive/v3.2.0.tar.gz) and copied the file to http://www.nmr.mgh.harvard.edu/~you2/cmake-basis-3.2.0.tar.gz, updated the url and MD5 in build/CMakeList.txt (I got the MD5 from windows by the command in cmd.exe "CertUtil -hashfile cmake-basis-3.2.0.tar.gz MD5"). This was done on Nov 12 2015.
+- Changed affine and rigid registration, to hirarchically search in different ranges and by different similarity measures, more adaptive to the input images, and adaptive to the affine/rigid needs.
+- Added an option (the '-I' option) in CalculateImageSimilarity.cxx to calcualte image similarity only within the intersection of the two images'foreground areas, rather than in the whole image (the default setting).
 - Now able to proceed even if some flirt-based affine registation jobs fail (very rare cases, but we did notice some flirt failures).
 - Modified the FindAdaptiveThreshold() function in the utilities.cxx program, more conservative thresholding for background noise removal in the pre-processing steps. Improve registrations that involve OASIS skull-stripped images while not affecting many other registration tasks.
-- Added a new function to allow rigid registration only, and rigid followed by deformable registration. Previously we only allowed affine only or affine followed by deformable.
+- Added a new function to allow rigid registration only (-a 4), and rigid followed by deformable registration (-a 3). Previously we only allowed affine only (-a 2) or affine followed by deformable (-a 1), or no affine/rigid and only deformable (-a 0).
 - Modified the format of 2D deformation. It used to have dim[5]=2 to specify the two displacement components. Now we treat it as a special 3D deformation with dim[5]=3, dim[3]=1 and z displacement constantly 0. With this changes, we can apply all the deformation tools to 2D deformations.
 
 
@@ -48,8 +70,7 @@ Release 1.4.2 (October, 6, 2014)
 - Improved the error message for flirt being not detected in the system environment.
 - Updated the publication list.
 - Relaxed the requirement for identical voxel size between the source image (-S) and the label image (-L). Now these two images are considered to have identical voxel size as long as they differ less than 0.5%.
-- Modified the CalculateJacobian.cxx code, so that it considers physical space other than image space. This correction is important for voxel based
-morphometry. As a consequency, the usage of dramms-jacobian has been slightly changed. It now requires the input of the source and target images, to convert the dramms deformation (which is in image space) to physical space before jacobian calculation.
+- Modified the CalculateJacobian.cxx code, so that it considers physical space other than image space. This correction is important for voxel based morphometry. As a consequency, the usage of dramms-jacobian has been slightly changed. It now requires the input of the source and target images, to convert the dramms deformation (which is in image space) to physical space before jacobian calculation.
 - Corrected the exit signal for running affine registration only in dramms. When the "-a 2" option is used, dramms will only run and output the affine registration, and then exit with an 'exit 0' signal, not the 'exit 1' signal as before (Thanks to Lilla Zollei for reporting this issue).
 - Increast the robustness wrt raw images --- utilize the imaginary parts of Gabor filter response as a way to detect whether there is a large amount of the background noise, and if there is, reply on real parts of the Gabor response, which is less affected by the background noise.
 - Improved the condition and content of the error message for the memory shortage problem.

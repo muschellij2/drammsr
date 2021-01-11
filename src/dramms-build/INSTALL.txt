@@ -1,20 +1,19 @@
 
-  Section of Biomedical Image Analysis
-  Department of Radiology
-  University of Pennsylvania
-  3600 Market Street, Suite 380
-  Philadelphia, PA 19104
 
-  Web:   https://www.cbica.upenn.edu/sbia/
-  Email: sbia-software at uphs.upenn.edu
+  Web:   https://www.nitrc.org/projects/dramms/
+         https://www.cbica.upenn.edu/sbia/
+  Email: yangming.ou@mgh.harvard.edu
+         sbia-software at uphs.upenn.edu
 
-  Copyright (c) 2011--2014 University of Pennsylvania. All rights reserved.
+  Copyright (c) 2011--2013 University of Pennsylvania. All rights reserved.
+  Copyright (c) 2014--2016 Massachusetts General Hospital, Harvard Medical School. All rights reserved.
+  Copyright (c) 2016--     Boston Childrens Hospital, Harvard Medical School. All rights reserved.
   See http://www.cbica.upenn.edu/sbia/software/license.html or COPYING file.
 
 
 
-INSTALLATION
-============
+INSTALLATION (for Users)
+=========================
 
   The DRAMMS software has been installed in multiple research labs worldwide. It usually takes 5-10 minutes to install. 
   Please strictly follow the steps on the following webpage to install:
@@ -22,5 +21,24 @@ INSTALLATION
 
   http://www.cbica.upenn.edu/sbia/software/dramms/installation.html
 
+
+
+
+INSTALLATION (for Developers in SBIA only)
+==========================================
+
+  to update the website using sphinx:
+  
+  suppose the dramms src files are installed in ${DRAMMS_src_dir}, one can either specify another separate folder as ${DRAMMS_build_dir} or to use let DRAMMS_build_dir=${DRAMMS_src_dir}/build in BATH.
+
+  step 1: the same installation as the above for users (the cbica website instructions), except that to turn "BUILD_DOCUMENTATION" to ON (default is OFF).
+  step 2: after "make", do
+          >> cd ${DRAMMS_build_dir}/bundle/src/DRAMMS-build/doc/
+          >> /sbia/sbiasfw/external/python/epd/7.3.1/bin/sphinx-build -c ${DRAMMS_build_dir}/bundle/src/DRAMMS-build/doc ${DRAMMS_src_dir}/doc/ ${DRAMMS_build_dir}/html
+          >> cp ${DRAMMS_build_dir}/bundle/src/DRAMMS-build/doc/latex/DRAMMS_Software_Manual.pdf ${DRAMMS_build_dir}/bundle/src/DRAMMS-build/doc/html/_downloads/
+
+  After done, the binaries are in ${DRAMMS_build_dir}/bin, and also in ${DRAMMS_build_dir}/bundle/src/DRAMMS_build/bin
+              the website including the new manual is in ${DRAMMS_build_dir}/bundle/src/DRAMMS_build/doc/html
+              the manual is in ${DRAMMS_build_dir}/bundle/src/DRAMMS_build/doc/latex/DRAMMS_Software_Manual.pdf
 
 
