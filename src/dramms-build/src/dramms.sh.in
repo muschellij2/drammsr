@@ -557,14 +557,14 @@ if [ $RAVENS != 'NULL' ]; then
 fi
 
 function readlink2 {
-    xout=`readlink -f ${inputImgA}`
+    xout=`readlink -f ${1} 2> /dev/null`
     if [ "$?" != "0" ]; then
-        xout=`greadlink -f ${inputImgA}`;
+        xout=`greadlink -f ${1}`;
     fi
     echo ${xout}
 }
 
-inputImgA=`readlink2 ${inputImgA} 2> /dev/null`;
+inputImgA=`readlink2 ${inputImgA}`;
 inputImgA_basename=`basename ${inputImgA}`
 inputImgA_path=`realpath ${inputImgA}`
 inputImgA_path=`dirname ${inputImgA_path}`
@@ -575,7 +575,7 @@ if [ ! -f ${inputImgA} ]; then
 	exit 1
 fi
 
-inputImgB=`readlink2 ${inputImgB} 2> /dev/null`
+inputImgB=`readlink2 ${inputImgB}`
 inputImgB_basename=`basename ${inputImgB}`
 inputImgB_path=`realpath ${inputImgB}`
 inputImgB_path=`dirname ${inputImgB_path}`

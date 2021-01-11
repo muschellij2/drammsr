@@ -17,7 +17,7 @@ Imports:
     oro.nifti,
     utils
 SystemRequirements: 
-  cmake 2.8.5-2.8.9 (http://www.cmake.org),
+  cmake (http://www.cmake.org),
   FSL (http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation)
 RoxygenNote: 7.1.1
 Remotes: muschellij2/neurobase,muschellij2/fslr
